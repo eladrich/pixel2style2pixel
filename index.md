@@ -10,7 +10,7 @@
 ### StyleGAN Encoding
 Here, we use pSp to find the latent code of real images in the latent domain of a pretrained StyleGAN generator. 
 <p align="center">
-<img src="" width="800px"/>
+<img src="https://media.giphy.com/media/cvTXRcBfkXpmRjccCE/giphy-downsized-large.gif" width="800px"/>
 
 </p>
 
@@ -18,20 +18,20 @@ Here, we use pSp to find the latent code of real images in the latent domain of 
 ### Face Frontalization
 In this application we want to generate a front-facing face from a given input image. 
 <p align="center">
-<img src="" width="800px"/>
+<img src="https://media.giphy.com/media/rO1c0lSlbAFAPKFu2O/giphy.gif" width="800px"/>
 
 </p>
 
 ### Conditional Image Synthesis
 Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. Using style-mixing, we inherently support mutli-modal synthesis for a single input.
 <p align="center">
-<img src="" width="800px"/>
+<img src="https://media.giphy.com/media/LxeH8ZKwSQ7jGrnuYZ/giphy.gif" width="800px"/>
 
 </p>
 
 ### Super Resolution
 Given a low-resolution input image, we generate a corresponding high-resolution image. As this too is an ambiguous task, we can use style-mixing to produce several plausible results.
 <p align="center">
-<img src="" width="800px"/>
+<img src="https://media.giphy.com/media/lSNLTFpAERd7R6dWBv/giphy-downsized-large.gif" width="800px"/>
 
 </p>
