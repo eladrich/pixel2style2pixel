@@ -18,7 +18,7 @@ Here, we use pSp to find the latent code of real images in the latent domain of 
 ### Face Frontalization
 In this application we want to generate a front-facing face from a given input image. 
 <p align="center">
-<img src="https://media.giphy.com/media/cOT6P3dYVN6ILOd1uP/giphy-downsized-large.gif" width="800px"/>
+<img src="https://media.giphy.com/media/cOT6P3dYVN6ILOd1uP/source.gif" width="800px"/>
 
 </p>
 
