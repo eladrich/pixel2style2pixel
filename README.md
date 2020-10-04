@@ -33,7 +33,7 @@ In this application we want to generate a front-facing face from a given input i
 </p>
 
 ### Conditional Image Synthesis
-Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. Using style-mixing, we inherently support mutli-modal synthesis for a single input.
+Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. Using style-mixing, we inherently support multi-modal synthesis for a single input.
 <p align="center">
 <img src="docs/seg2image.png" width="800px"/>
 <img src="docs/sketch2image.png" width="800px"/>
