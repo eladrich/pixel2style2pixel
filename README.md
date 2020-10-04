@@ -55,8 +55,8 @@ Given a low-resolution input image, we generate a corresponding high-resolution 
 ### Installation
 - Clone this repo:
 ``` 
-git clone https://github.com/eladrich/pix2style2pix.git
-cd pix2style2pix
+git clone https://github.com/eladrich/pixel2style2pixel.git
+cd pixel2style2pixel
 ```
 - Dependencies:  
 We recommend running this repository using [Anaconda](https://docs.anaconda.com/anaconda/install/). 
@@ -320,7 +320,7 @@ python scripts/calc_losses_on_images.py \
 ### Repository structure
 | Path | Description <img width=200>
 | :--- | :---
-| pix2style2pix | Repository root folder
+| pixel2style2pixel | Repository root folder
 | &boxvr;&nbsp; configs | Folder containing configs defining model/data paths and data transforms
 | &boxvr;&nbsp; criteria | Folder containing various loss criterias for training
 | &boxvr;&nbsp; datasets | Folder with various dataset objects and augmentations
