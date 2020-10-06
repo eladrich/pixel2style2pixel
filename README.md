@@ -14,7 +14,8 @@ Official Implementation of our pSp paper for both training and evaluation. The p
 allow solving different image-to-image translation problems using its encoder.
 
 ## Recent Updates
-**`2020.10.04`**: Initial code release
+**`2020.10.04`**: Initial code release  
+**`2020.10.06`**: Add pSp toonify model (Thanks to the great work from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/))!
 
 ## Applications
 ### StyleGAN Encoding
@@ -45,6 +46,18 @@ Given a low-resolution input image, we generate a corresponding high-resolution 
 <img src="docs/super_res_32.jpg" width="800px"/>
 <img src="docs/super_res_style_mixing.jpg" width="800px"/>
 </p>
+
+### Additional Applications
+#### Toonify
+Using the toonify StyleGAN built by [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/),
+we take a real face image and generate a toonified version of the given image. We train the pSp encoder to directly reconstruct real 
+face images inside the toons latent space resulting in a projection of each image to the closest toon. We do so without requiring any labeled pairs
+or distillation!
+<p align="center">
+<img src="docs/toonify_input.jpg" width="800px"/>
+<img src="docs/toonify_output.jpg.jpg" width="800px"/>
+</p>
+
 
 ## Getting Started
 ### Prerequisites
@@ -77,6 +90,7 @@ Please download the pre-trained models from the following links. Each pSp model 
 |[Sketch to Image](https://drive.google.com/file/d/1lB7wk7MwtdxL-LL4Z_T76DuCfk00aSXA/view?usp=sharing)  | pSp trained with the CelebA-HQ dataset for image synthesis from sketches.
 |[Segmentation to Image](https://drive.google.com/file/d/1VpEKc6E6yG3xhYuZ0cq8D2_1CbT0Dstz/view?usp=sharing) | pSp trained with the CelebAMask-HQ dataset for image synthesis from segmentation maps.
 |[Super Resolution](https://drive.google.com/file/d/1ZpmSXBpJ9pFEov6-jjQstAlfYbkebECu/view?usp=sharing)  | pSp trained with the CelebA-HQ dataset for super resolution (up to x32 down-sampling).
+|[Toonify](https://drive.google.com/file/d/1YKoiVuFaqdvzDP5CZaqa3k5phL-VDmyz/view)  | pSp trained with the FFHQ dataset for toonification using StyleGAN generator from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/).
 
 If you wish to use one of the pretrained models for training or inference, you may do so using the flag `--checkpoint_path`.
 
@@ -130,7 +144,7 @@ The main training script can be found in `scripts/train.py`.
 Intermediate training results are saved to `opts.exp_dir`. This includes checkpoints, train outputs, and test outputs.  
 Additionally, if you have tensorboard installed, you can visualize tensorboard logs in `opts.exp_dir/logs`.
 
-- **Training the pSp Encoder**
+#### **Training the pSp Encoder**
 ```
 python scripts/train.py \
 --dataset_type=ffhq_encode \
@@ -148,7 +162,7 @@ python scripts/train.py \
 --id_lambda=0.1
 ```
 
-- **Frontalization**
+#### **Frontalization**
 ```
 python scripts/train.py \
 --dataset_type=ffhq_frontalize \
@@ -169,7 +183,7 @@ python scripts/train.py \
 --w_norm_lambda=0.005
 ```
 
-- **Sketch to Face**
+#### **Sketch to Face**
 ```
 python scripts/train.py \
 --dataset_type=celebs_sketch_to_face \
@@ -190,7 +204,7 @@ python scripts/train.py \
 --input_nc=1
 ```
 
-- **Segmentation Map to Face**
+#### **Segmentation Map to Face**
 ```
 python scripts/train.py \
 --dataset_type=celebs_seg_to_face \
@@ -212,7 +226,7 @@ python scripts/train.py \
 ```
 Notice with conditional image synthesis no identity loss is utilized (i.e. `--id_lambda=0`)
 
-- **Super Resolution**
+#### **Super Resolution**
 ``` 
 python scripts/train.py \
 --dataset_type=celebs_super_resolution \
@@ -240,6 +254,18 @@ python scripts/train.py \
 is the number of semantic categories. 
 - Similarly, for generating images from sketches, please specify `--label_nc=1` and `--input_nc=1`.
 - Specifying `--label_nc=0` (the default value), will directly use the RGB colors as input.
+
+### Additional Applications 
+#### **Toonify**  
+This is trained exactly like the StyleGAN inversion task with several changes:   
+- Change from FFHQ StyleGAN to toonifed StyleGAN (can be set using `--stylegan_weights`)
+    - The toonify generator is taken from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/) 
+      and converted to Pytorch using [rosinality's](https://github.com/rosinality/stylegan2-pytorch) conversion script.
+    - For convenience, the converted generator Pytorch model may be downloaded [here](https://drive.google.com/file/d/1r3XVCt_WYUKFZFxhNH-xO2dTtF6B5szu/view?usp=sharing).
+- Increase `id_lambda` from `0.1` to `1`  
+- Increase `w_norm_lambda` from `0.005` to `0.025`  
+
+We obtain the best results after around `6000` iterations of training (can be set using `--max_steps`) 
 
 
 ## Testing
