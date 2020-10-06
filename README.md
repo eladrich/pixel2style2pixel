@@ -34,7 +34,7 @@ In this application we want to generate a front-facing face from a given input i
 </p>
 
 ### Conditional Image Synthesis
-Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. Using style-mixing, we inherently support mutli-modal synthesis for a single input.
+Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. Using style-mixing, we inherently support multi-modal synthesis for a single input.
 <p align="center">
 <img src="docs/seg2image.png" width="800px"/>
 <img src="docs/sketch2image.png" width="800px"/>
@@ -68,8 +68,8 @@ or distillation!
 ### Installation
 - Clone this repo:
 ``` 
-git clone https://github.com/eladrich/pix2style2pix.git
-cd pix2style2pix
+git clone https://github.com/eladrich/pixel2style2pixel.git
+cd pixel2style2pixel
 ```
 - Dependencies:  
 We recommend running this repository using [Anaconda](https://docs.anaconda.com/anaconda/install/). 
@@ -346,7 +346,7 @@ python scripts/calc_losses_on_images.py \
 ### Repository structure
 | Path | Description <img width=200>
 | :--- | :---
-| pix2style2pix | Repository root folder
+| pixel2style2pixel | Repository root folder
 | &boxvr;&nbsp; configs | Folder containing configs defining model/data paths and data transforms
 | &boxvr;&nbsp; criteria | Folder containing various loss criterias for training
 | &boxvr;&nbsp; datasets | Folder with various dataset objects and augmentations
