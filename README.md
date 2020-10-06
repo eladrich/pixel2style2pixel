@@ -55,7 +55,7 @@ face images inside the toons latent space resulting in a projection of each imag
 or distillation!
 <p align="center">
 <img src="docs/toonify_input.jpg" width="800px"/>
-<img src="docs/toonify_output.jpg.jpg" width="800px"/>
+<img src="docs/toonify_output.jpg" width="800px"/>
 </p>
 
 
