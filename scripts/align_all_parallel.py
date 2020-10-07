@@ -130,7 +130,7 @@ def align_face(filepath, predictor):
 		quad += pad[:2]
 
 	# Transform.
-	img = img.target_transform((transform_size, transform_size), PIL.Image.QUAD, (quad + 0.5).flatten(), PIL.Image.BILINEAR)
+	img = img.transform((transform_size, transform_size), PIL.Image.QUAD, (quad + 0.5).flatten(), PIL.Image.BILINEAR)
 	if output_size < transform_size:
 		img = img.resize((output_size, output_size), PIL.Image.ANTIALIAS)
 
