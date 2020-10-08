@@ -47,17 +47,6 @@ Given a low-resolution input image, we generate a corresponding high-resolution 
 <img src="docs/super_res_style_mixing.jpg" width="800px"/>
 </p>
 
-### Additional Applications
-#### Toonify
-Using the toonify StyleGAN built by [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/),
-we take a real face image and generate a toonified version of the given image. We train the pSp encoder to directly reconstruct real 
-face images inside the toons latent space resulting in a projection of each image to the closest toon. We do so without requiring any labeled pairs
-or distillation!
-<p align="center">
-<img src="docs/toonify_input.jpg" width="800px"/>
-<img src="docs/toonify_output.jpg" width="800px"/>
-</p>
-
 
 ## Getting Started
 ### Prerequisites
@@ -255,19 +244,6 @@ is the number of semantic categories.
 - Similarly, for generating images from sketches, please specify `--label_nc=1` and `--input_nc=1`.
 - Specifying `--label_nc=0` (the default value), will directly use the RGB colors as input.
 
-### Additional Applications 
-#### **Toonify**  
-This is trained exactly like the StyleGAN inversion task with several changes:   
-- Change from FFHQ StyleGAN to toonifed StyleGAN (can be set using `--stylegan_weights`)
-    - The toonify generator is taken from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/) 
-      and converted to Pytorch using [rosinality's](https://github.com/rosinality/stylegan2-pytorch) conversion script.
-    - For convenience, the converted generator Pytorch model may be downloaded [here](https://drive.google.com/file/d/1r3XVCt_WYUKFZFxhNH-xO2dTtF6B5szu/view?usp=sharing).
-- Increase `id_lambda` from `0.1` to `1`  
-- Increase `w_norm_lambda` from `0.005` to `0.025`  
-
-We obtain the best results after around `6000` iterations of training (can be set using `--max_steps`) 
-
-
 ## Testing
 ### Inference
 Having trained your model, you can use `scripts/inference.py` to apply the model on a set of images.   
@@ -342,8 +318,36 @@ python scripts/calc_losses_on_images.py \
 --gt_path=/path/to/test_images \
 ```
 
+## Additional Applications
+To better show the flexibility of our pSp framework we present additional applications below.
 
-### Repository structure
+As with our main applications, you may download the pretrained models here: 
+| Path | Description
+| :--- | :----------
+|[Toonify](https://drive.google.com/file/d/1YKoiVuFaqdvzDP5CZaqa3k5phL-VDmyz/view)  | pSp trained with the FFHQ dataset for toonification using StyleGAN generator from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/).
+
+### Toonify
+Using the toonify StyleGAN built by [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/),
+we take a real face image and generate a toonified version of the given image. We train the pSp encoder to directly reconstruct real 
+face images inside the toons latent space resulting in a projection of each image to the closest toon. We do so without requiring any labeled pairs
+or distillation!
+<p align="center">
+<img src="docs/toonify_input.jpg" width="800px"/>
+<img src="docs/toonify_output.jpg" width="800px"/>
+</p>
+
+This is trained exactly like the StyleGAN inversion task with several changes:   
+- Change from FFHQ StyleGAN to toonifed StyleGAN (can be set using `--stylegan_weights`)
+    - The toonify generator is taken from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/) 
+      and converted to Pytorch using [rosinality's](https://github.com/rosinality/stylegan2-pytorch) conversion script.
+    - For convenience, the converted generator Pytorch model may be downloaded [here](https://drive.google.com/file/d/1r3XVCt_WYUKFZFxhNH-xO2dTtF6B5szu/view?usp=sharing).
+- Increase `id_lambda` from `0.1` to `1`  
+- Increase `w_norm_lambda` from `0.005` to `0.025`  
+
+We obtain the best results after around `6000` iterations of training (can be set using `--max_steps`) 
+
+
+## Repository structure
 | Path | Description <img width=200>
 | :--- | :---
 | pixel2style2pixel | Repository root folder
