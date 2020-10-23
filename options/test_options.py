@@ -13,6 +13,7 @@ class TestOptions:
 		self.parser.add_argument('--checkpoint_path', default=None, type=str, help='Path to pSp model checkpoint')
 		self.parser.add_argument('--data_path', type=str, default='gt_images', help='Path to directory of images to evaluate')
 		self.parser.add_argument('--couple_outputs', action='store_true', help='Whether to also save inputs + outputs side-by-side')
+		self.parser.add_argument('--resize_outputs', action='store_true', help='Whether to resize outputs to 256x256 or keep at 1024x1024')
 
 		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')
 		self.parser.add_argument('--test_workers', default=2, type=int, help='Number of test/inference dataloader workers')

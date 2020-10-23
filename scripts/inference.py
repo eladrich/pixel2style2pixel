@@ -69,7 +69,7 @@ def run():
 	global_i = 0
 	global_time = []
 	for input_batch in tqdm(dataloader):
-		if global_i > opts.n_images:
+		if global_i >= opts.n_images:
 			break
 		with torch.no_grad():
 			input_cuda = input_batch.cuda().float()
@@ -83,22 +83,22 @@ def run():
 			im_path = dataset.paths[global_i]
 
 			if opts.couple_outputs or global_i % 100 == 0:
-				input_resized = log_input_image(input_batch[i], opts)
+				input_im = log_input_image(input_batch[i], opts)
+				resize_amount = (256, 256) if opts.resize_outputs else (1024, 1024)
 				if opts.resize_factors is not None:
 					# for super resolution, save the original, down-sampled, and output
 					source = Image.open(im_path)
-					res = np.concatenate([np.array(source.resize((256, 256))),
-					                      np.array(input_resized.resize((256, 256), resample=Image.NEAREST)),
-					                      np.array(result.resize((256, 256)))], axis=1)
+					res = np.concatenate([np.array(source.resize(resize_amount)),
+										  np.array(input_im.resize(resize_amount, resample=Image.NEAREST)),
+										  np.array(result.resize(resize_amount))], axis=1)
 				else:
 					# otherwise, save the original and output
-					res = np.concatenate([np.array(input_resized.resize((256, 256))),
-					                      np.array(result.resize((256, 256)))], axis=1)
-
+					res = np.concatenate([np.array(input_im.resize(resize_amount)),
+										  np.array(result.resize(resize_amount))], axis=1)
 				Image.fromarray(res).save(os.path.join(out_path_coupled, os.path.basename(im_path)))
 
 			im_save_path = os.path.join(out_path_results, os.path.basename(im_path))
-			Image.fromarray(np.array(result.resize((256, 256)))).save(im_save_path)
+			Image.fromarray(np.array(result)).save(im_save_path)
 
 			global_i += 1
 
@@ -112,7 +112,7 @@ def run():
 
 def run_on_batch(inputs, net, opts):
 	if opts.latent_mask is None:
-		result_batch = net(inputs, randomize_noise=False)
+		result_batch = net(inputs, randomize_noise=False, resize=opts.resize_outputs)
 	else:
 		latent_mask = [int(l) for l in opts.latent_mask.split(",")]
 		result_batch = []
@@ -126,7 +126,8 @@ def run_on_batch(inputs, net, opts):
 			res = net(input_image.unsqueeze(0).to("cuda").float(),
 			          latent_mask=latent_mask,
 			          inject_latent=latent_to_inject,
-			          alpha=opts.mix_alpha)
+			          alpha=opts.mix_alpha,
+					  resize=opts.resize_outputs)
 			result_batch.append(res)
 		result_batch = torch.cat(result_batch, dim=0)
 	return result_batch

@@ -267,6 +267,8 @@ script.
 - When running inference for super-resolution, please provide a single down-sampling value using `--resize_factors`.
 - Adding the flag `--couple_outputs` will save an additional image containing the input and output images side-by-side in the sub-directory
 `inference_coupled`. Otherwise, only the output image is saved to the sub-directory `inference_results`.
+- By default, the images will be saved at resolutiosn of 1024x1024, the original output size of StyleGAN. If you wish to save 
+outputs resized to resolutions of 256x256, you can do so by adding the flag `--resize_outputs`.
 
 
 ### Multi-Modal Synthesis with Style-Mixing
@@ -292,6 +294,8 @@ style mixing on every image in the given `data_path`.
 - You may also include the argument `--mix_alpha=m` where `m` is a float defining the mixing coefficient between the 
 input latent and the randomly drawn latent.
 - When performing style-mixing for super-resolution, please provide a single down-sampling value using `--resize_factors`.
+- By default, the images will be saved at resolutiosn of 1024x1024, the original output size of StyleGAN. If you wish to save 
+outputs resized to resolutions of 256x256, you can do so by adding the flag `--resize_outputs`.
 
 
 ### Computing Metrics

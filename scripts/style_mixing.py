@@ -60,7 +60,7 @@ def run():
 
 	global_i = 0
 	for input_batch in tqdm(dataloader):
-		if global_i > opts.n_images:
+		if global_i >= opts.n_images:
 			break
 		with torch.no_grad():
 			input_batch = input_batch.cuda()
@@ -78,17 +78,19 @@ def run():
 					res = net(input_image.unsqueeze(0).to("cuda").float(),
 					          latent_mask=latent_mask,
 					          inject_latent=latent_to_inject,
-					          alpha=opts.mix_alpha)
+					          alpha=opts.mix_alpha,
+							  resize=opts.resize_outputs)
 					multi_modal_outputs.append(res[0])
 
 				# visualize multi modal outputs
 				input_im_path = dataset.paths[global_i]
 				image = input_batch[image_idx]
 				input_image = log_input_image(image, opts)
-				res = np.array(input_image.resize((256, 256)))
+				resize_amount = (256, 256) if opts.resize_outputs else (1024, 1024)
+				res = np.array(input_image.resize(resize_amount))
 				for output in multi_modal_outputs:
 					output = tensor2im(output)
-					res = np.concatenate([res, np.array(output.resize((256, 256)))], axis=1)
+					res = np.concatenate([res, np.array(output.resize(resize_amount))], axis=1)
 				Image.fromarray(res).save(os.path.join(mixed_path_results, os.path.basename(input_im_path)))
 				global_i += 1
 
