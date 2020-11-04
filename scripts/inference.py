@@ -26,18 +26,14 @@ def run():
 		assert len(test_opts.resize_factors.split(',')) == 1, "When running inference, provide a single downsampling factor!"
 		out_path_results = os.path.join(test_opts.exp_dir, 'inference_results',
 		                                'downsampling_{}'.format(test_opts.resize_factors))
+		out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled',
+										'downsampling_{}'.format(test_opts.resize_factors))
 	else:
 		out_path_results = os.path.join(test_opts.exp_dir, 'inference_results')
-	os.makedirs(out_path_results, exist_ok=True)
+		out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled')
 
-	out_path_coupled = None
-	if test_opts.couple_outputs:
-		if test_opts.resize_factors is not None:
-			out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled',
-			                                'downsampling_{}'.format(test_opts.resize_factors))
-		else:
-			out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled')
-		os.makedirs(out_path_coupled, exist_ok=True)
+	os.makedirs(out_path_results, exist_ok=True)
+	os.makedirs(out_path_coupled, exist_ok=True)
 
 	# update test options with options used during training
 	ckpt = torch.load(test_opts.checkpoint_path, map_location='cpu')
