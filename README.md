@@ -374,6 +374,32 @@ We obtain the best results after around `6000` iterations of training (can be se
 ## TODOs
 - [ ] Add multi-gpu support
 
+## Credits
+**StyleGAN2 implementation:**  
+https://github.com/rosinality/stylegan2-pytorch  
+Copyright (c) 2019 Kim Seonghyeon  
+License (MIT) https://github.com/rosinality/stylegan2-pytorch/blob/master/LICENSE  
+
+**MTCNN, IR-SE50, and ArcFace models and implementations:**  
+https://github.com/TreB1eN/InsightFace_Pytorch  
+Copyright (c) 2018 TreB1eN  
+License (MIT) https://github.com/TreB1eN/InsightFace_Pytorch/blob/master/LICENSE  
+
+**CurricularFace model and implementation:**   
+https://github.com/HuangYG123/CurricularFace  
+Copyright (c) 2020 HuangYG123  
+License (MIT) https://github.com/HuangYG123/CurricularFace/blob/master/LICENSE  
+
+**Ranger optimizer implementation:**  
+https://github.com/lessw2020/Ranger-Deep-Learning-Optimizer   
+License (Apache License 2.0) https://github.com/lessw2020/Ranger-Deep-Learning-Optimizer/blob/master/LICENSE  
+
+**LPIPS implementation:**  
+https://github.com/S-aiueo32/lpips-pytorch  
+Copyright (c) 2020, Sou Uchida  
+License (BSD 2-Clause) https://github.com/S-aiueo32/lpips-pytorch/blob/master/LICENSE  
+
+
 ## Citation
 If you use this code for your research, please cite our paper <a href="https://arxiv.org/abs/2008.00951">Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation</a>:
 
