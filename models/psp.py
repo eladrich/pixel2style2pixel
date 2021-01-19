@@ -25,7 +25,7 @@ class pSp(nn.Module):
 		self.set_opts(opts)
 		# Define architecture
 		self.encoder = self.set_encoder()
-		self.decoder = Generator(1024, 512, 8)
+		self.decoder = Generator(opts.generator_image_size, 512, 8)
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
 		self.load_weights()
@@ -61,7 +61,7 @@ class pSp(nn.Module):
 			if self.opts.learn_in_w:
 				self.__load_latent_avg(ckpt, repeat=1)
 			else:
-				self.__load_latent_avg(ckpt, repeat=18)
+				self.__load_latent_avg(ckpt, repeat=self.opts.style_count)
 
 	def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, alpha=None):

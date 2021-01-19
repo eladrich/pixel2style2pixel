@@ -54,7 +54,7 @@ class GradualStyleEncoder(Module):
         self.body = Sequential(*modules)
 
         self.styles = nn.ModuleList()
-        self.style_count = 18
+        self.style_count = opts.style_count
         self.coarse_ind = 3
         self.middle_ind = 7
         for i in range(self.style_count):
