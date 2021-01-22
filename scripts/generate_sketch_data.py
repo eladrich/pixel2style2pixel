@@ -7,6 +7,8 @@ import numpy as np
 
 """
 NOTE!: Must have torch==0.4.1 and torchvision==0.2.1
+The sketch simplification model (sketch_gan.t7) from Simo Serra et al. can be downloaded from their official implementation: 
+    https://github.com/bobbens/sketch_simplification
 """
 
 
