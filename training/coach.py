@@ -83,7 +83,7 @@ class Coach:
 				# Logging related
 				if self.global_step % self.opts.image_interval == 0 or (
 						self.global_step < 1000 and self.global_step % 25 == 0):
-					self.parse_and_log_images(id_logs, x, y, y_hat, title='images/train/faces')
+					self.parse_and_log_images(id_logs, x, y, y_hat, title='images/train')
 				if self.global_step % self.opts.board_interval == 0:
 					self.print_metrics(loss_dict, prefix='train')
 					self.log_metrics(loss_dict, prefix='train')
@@ -122,7 +122,7 @@ class Coach:
 
 			# Logging related
 			self.parse_and_log_images(id_logs, x, y, y_hat,
-									  title='images/test/faces',
+									  title='images/test',
 									  subscript='{:04d}'.format(batch_idx))
 
 			# For first step just do sanity test on small amount of data
