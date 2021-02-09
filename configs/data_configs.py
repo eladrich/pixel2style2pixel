@@ -45,11 +45,18 @@ DATASETS = {
 		'test_source_root': dataset_paths['nist_sd14_test'],
 		'test_target_root': dataset_paths['nist_sd14_test'],
 	},
+	'nist_sd14_debug': {
+		'transforms': transforms_config.EncodeTransforms,
+		'train_source_root': dataset_paths['nist_sd14_debug'],
+		'train_target_root': dataset_paths['nist_sd14_debug'],
+		'test_source_root': dataset_paths['nist_sd14_debug'],
+		'test_target_root': dataset_paths['nist_sd14_debug'],
+	},
 	'nist_sd14_mnt': {
-		'transforms': transforms_config.SketchToImageTransforms,
+		'transforms': transforms_config.MntToFingerTransforms,
 		'train_source_root': dataset_paths['nist_sd14_mnt_train'],
-		'train_target_root': dataset_paths['nist_sd14_train'],
+		'train_target_root': dataset_paths['nist_sd14_mnt_gt_train'],
 		'test_source_root': dataset_paths['nist_sd14_mnt_test'],
-		'test_target_root': dataset_paths['nist_sd14_test'],
+		'test_target_root': dataset_paths['nist_sd14_mnt_gt_test'],
 	},
 }
