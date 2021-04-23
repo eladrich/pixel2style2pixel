@@ -36,6 +36,8 @@ def run():
 	opts.update(vars(test_opts))
 	if 'learn_in_w' not in opts:
 		opts['learn_in_w'] = False
+	if 'output_size' not in opts:
+		opts['output_size'] = 1024
 	opts = Namespace(**opts)
 
 	net = pSp(opts)
@@ -86,7 +88,7 @@ def run():
 				input_im_path = dataset.paths[global_i]
 				image = input_batch[image_idx]
 				input_image = log_input_image(image, opts)
-				resize_amount = (256, 256) if opts.resize_outputs else (1024, 1024)
+				resize_amount = (256, 256) if opts.resize_outputs else (opts.output_size, opts.output_size)
 				res = np.array(input_image.resize(resize_amount))
 				for output in multi_modal_outputs:
 					output = tensor2im(output)

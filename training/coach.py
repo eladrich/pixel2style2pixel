@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
 
 from utils import common, train_utils
-from criteria import id_loss, w_norm
+from criteria import id_loss, w_norm, moco_loss
 from configs import data_configs
 from datasets.images_dataset import ImagesDataset
 from criteria.lpips.lpips import LPIPS
@@ -32,13 +32,18 @@ class Coach:
 		self.net = pSp(self.opts).to(self.device)
 
 		# Initialize loss
+		if self.opts.id_lambda > 0 and self.opts.moco_lambda > 0:
+			raise ValueError('Both ID and MoCo loss have lambdas > 0! Please select only one to have non-zero lambda!')
+
+		self.mse_loss = nn.MSELoss().to(self.device).eval()
 		if self.opts.lpips_lambda > 0:
 			self.lpips_loss = LPIPS(net_type='alex').to(self.device).eval()
 		if self.opts.id_lambda > 0:
 			self.id_loss = id_loss.IDLoss().to(self.device).eval()
 		if self.opts.w_norm_lambda > 0:
 			self.w_norm_loss = w_norm.WNormLoss(start_from_latent_avg=self.opts.start_from_latent_avg)
-		self.mse_loss = nn.MSELoss().to(self.device).eval()
+		if self.opts.moco_lambda > 0:
+			self.moco_loss = moco_loss.MocoLoss().to(self.device).eval()
 
 		# Initialize optimizer
 		self.optimizer = self.configure_optimizers()
@@ -164,18 +169,16 @@ class Coach:
 		print('Loading dataset for {}'.format(self.opts.dataset_type))
 		dataset_args = data_configs.DATASETS[self.opts.dataset_type]
 		transforms_dict = dataset_args['transforms'](self.opts).get_transforms()
-		train_dataset_celeba = ImagesDataset(source_root=dataset_args['train_source_root'],
-		                                     target_root=dataset_args['train_target_root'],
-		                                     source_transform=transforms_dict['transform_source'],
-		                                     target_transform=transforms_dict['transform_gt_train'],
-		                                     opts=self.opts)
-		test_dataset_celeba = ImagesDataset(source_root=dataset_args['test_source_root'],
-		                                    target_root=dataset_args['test_target_root'],
-		                                    source_transform=transforms_dict['transform_source'],
-		                                    target_transform=transforms_dict['transform_test'],
-		                                    opts=self.opts)
-		train_dataset = train_dataset_celeba
-		test_dataset = test_dataset_celeba
+		train_dataset = ImagesDataset(source_root=dataset_args['train_source_root'],
+									  target_root=dataset_args['train_target_root'],
+									  source_transform=transforms_dict['transform_source'],
+									  target_transform=transforms_dict['transform_gt_train'],
+									  opts=self.opts)
+		test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+									 target_root=dataset_args['test_target_root'],
+									 source_transform=transforms_dict['transform_source'],
+									 target_transform=transforms_dict['transform_test'],
+									 opts=self.opts)
 		print("Number of training samples: {}".format(len(train_dataset)))
 		print("Number of test samples: {}".format(len(test_dataset)))
 		return train_dataset, test_dataset
@@ -209,6 +212,12 @@ class Coach:
 			loss_w_norm = self.w_norm_loss(latent, self.net.latent_avg)
 			loss_dict['loss_w_norm'] = float(loss_w_norm)
 			loss += loss_w_norm * self.opts.w_norm_lambda
+		if self.opts.moco_lambda > 0:
+			loss_moco, sim_improvement, id_logs = self.moco_loss(y_hat, y, x)
+			loss_dict['loss_moco'] = float(loss_moco)
+			loss_dict['id_improve'] = float(sim_improvement)
+			loss += loss_moco * self.opts.moco_lambda
+
 		loss_dict['loss'] = float(loss)
 		return loss, loss_dict, id_logs
 

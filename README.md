@@ -3,10 +3,19 @@
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](http://colab.research.google.com/github/eladrich/pixel2style2pixel/blob/master/notebooks/inference_playground.ipynb)
 
-> We present a generic image-to-image translation framework, Pixel2Style2Pixel (pSp). Our pSp framework is based on a novel encoder network that directly generates a series of style vectors which are fed into a pretrained StyleGAN generator, forming the extended W+ latent space. We first show that our encoder can directly embed real images into W+, with no additional optimization. We further introduce a dedicated identity loss which is shown to achieve improved performance in the reconstruction of an input image. We demonstrate pSp to be a simple architecture that, by leveraging a well-trained, fixed generator network, can be easily applied on a wide-range of image-to-image translation tasks. Solving these tasks through the style representation results in a global approach that does not rely on a local pixel-to-pixel correspondence and further supports multi-modal synthesis via the resampling of styles. Notably, we demonstrate that pSp can be trained to align a face image to a frontal pose without any labeled data, generate multi-modal results for ambiguous tasks such as conditional face generation from segmentation maps, and construct high-resolution images from corresponding low-resolution images.
+> We present a generic image-to-image translation framework, pixel2style2pixel (pSp). 
+Our pSp framework is based on a novel encoder network that directly generates a series of style vectors which are fed into a pretrained StyleGAN generator, 
+forming the extended W+ latent space. We first show that our encoder can directly embed real images into W+, with no additional optimization.
+Next, we propose utilizing our encoder to directly solve image-to-image translation tasks, defining them as encoding problems from some input domain into the 
+latent domain. By deviating from the standard "invert first, edit later" methodology used with previous StyleGAN encoders, our approach can handle a variety of 
+tasks even when the input image is not represented in the StyleGAN domain. We show that solving translation tasks through StyleGAN significantly simplifies the training process, as no adversary is required, has better support 
+>for solving tasks without pixel-to-pixel correspondence, and inherently supports multi-modal synthesis via the resampling of styles. 
+Finally, we demonstrate the potential of our framework on a variety of facial image-to-image translation tasks, even when compared to state-of-the-art solutions designed specifically for a single task, and further show that it can be extended beyond the human facial domain. 
 
 <p align="center">
-<img src="docs/teaser.jpg" width="800px"/>
+<img src="docs/teaser.png" width="800px"/>
+<br>
+The proposed pixel2style2pixel framework can be used to solve a wide variety of image-to-image translation tasks. Here we show results of pSp on StyleGAN inversion, multi-modal conditional image synthesis, facial frontalization, inpainting and super-resolution.
 </p>
 
 ## Description   
@@ -15,7 +24,10 @@ allow solving different image-to-image translation problems using its encoder.
 
 ## Recent Updates
 **`2020.10.04`**: Initial code release  
-**`2020.10.06`**: Add pSp toonify model (Thanks to the great work from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/))!
+**`2020.10.06`**: Add pSp toonify model (Thanks to the great work from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/))!  
+**`2021.04.18`**: Added several new features: 
+  - Added supported for StyleGANs of different resolutions (e.g., 256, 512, 1024). This can be set using the flag `--output_size`, which is set to 1024 by default. 
+  - Added support for the MoCo-Based similarity loss introduced in [encoder4editing (Tov et al. 2021)](https://github.com/omertov/encoder4editing). More details are provided [below](https://github.com/eladrich/pixel2style2pixel#training-psp).
 
 ## Applications
 ### StyleGAN Encoding
@@ -88,6 +100,7 @@ In addition, we provide various auxiliary models needed for training your own pS
 | :--- | :----------
 |[FFHQ StyleGAN](https://drive.google.com/file/d/1EM87UquaoQmk17Q8d5kYIAHqu0dkYqdT/view?usp=sharing) | StyleGAN model pretrained on FFHQ taken from [rosinality](https://github.com/rosinality/stylegan2-pytorch) with 1024x1024 output resolution.
 |[IR-SE50 Model](https://drive.google.com/file/d/1KW7bjndL3QG3sxBbZxreGHigcCCpsDgn/view?usp=sharing) | Pretrained IR-SE50 model taken from [TreB1eN](https://github.com/TreB1eN/InsightFace_Pytorch) for use in our ID loss during pSp training.
+|[MoCo ResNet-50](https://drive.google.com/file/d/18rLcNGdteX5LwT7sv_F7HWr12HpVEzVe/view?usp=sharing)  | Pretrained ResNet-50 model trained using MOCOv2 for computing MoCo-based similarity loss on non-facial domains. The model is taken from the [official implementation](https://github.com/facebookresearch/moco).
 |[CurricularFace Backbone](https://drive.google.com/file/d/1f4IwVa2-Bn9vWLwB-bUwm53U_MlvinAj/view?usp=sharing)  | Pretrained CurricularFace model taken from [HuangYG123](https://github.com/HuangYG123/CurricularFace) for use in ID similarity metric computation.
 |[MTCNN](https://drive.google.com/file/d/1tJ7ih-wbCO6zc3JhI_1ZGjmwXKKaPlja/view?usp=sharing)  | Weights for MTCNN model taken from [TreB1eN](https://github.com/TreB1eN/InsightFace_Pytorch) for use in ID similarity metric computation. (Unpack the tar.gz to extract the 3 model weights.)
 
@@ -239,10 +252,21 @@ python scripts/train.py \
 - See `options/train_options.py` for all training-specific flags. 
 - See `options/test_options.py` for all test-specific flags.
 - If you wish to resume from a specific checkpoint (e.g. a pretrained pSp model), you may do so using `--checkpoint_path`.
+- By default, we assume that the StyleGAN used outputs images at resolution `1024x1024`. If you wish to use a StyleGAN at a smaller resolution, you can do so by using the flag `--output_size` (e.g., `--output_size=256`). 
 - If you wish to generate images from segmentation maps, please specify `--label_nc=N`  and `--input_nc=N` where `N` 
 is the number of semantic categories. 
 - Similarly, for generating images from sketches, please specify `--label_nc=1` and `--input_nc=1`.
 - Specifying `--label_nc=0` (the default value), will directly use the RGB colors as input.
+
+**Identity/Similarity Losses**  
+In pSp, we introduce a facial identity loss using a pre-trained ArcFace network for facial recognition. When operating on the human facial domain, we 
+highly recommend employing this loss objective by using the flag `--id_lambda`.  
+In a more recent paper, [encoder4editing](https://github.com/omertov/encoder4editing), the authors generalize this identity loss to other domains by 
+using a MoCo-based ResNet to extract features instead of an ArcFace network.
+Applying this MoCo-based similarity loss can be done by using the flag `--moco_lambda`. We recommend setting `--moco_lambda=0.5` in your experiments.  
+Please note, you <ins>cannot</ins> set both `id_lambda` and `moco_lambda` to be active simultaneously (e.g., to use the MoCo-based loss, you should specify, 
+`--moco_lambda=0.5 --id_lambda=0`).
+
 
 ## Testing
 ### Inference
@@ -400,6 +424,30 @@ Copyright (c) 2020, Sou Uchida
 License (BSD 2-Clause) https://github.com/S-aiueo32/lpips-pytorch/blob/master/LICENSE  
 
 **Please Note**: The CUDA files under the [StyleGAN2 ops directory](https://github.com/eladrich/pixel2style2pixel/tree/master/models/stylegan2/op) are made available under the [Nvidia Source Code License-NC](https://nvlabs.github.io/stylegan2/license.html)
+
+## Inspired by pSp
+Below are several works inspired by pSp that we found particularly interesting:  
+
+**Reverse Toonification**  
+Using our pSp encoder, artist [Nathan Shipley](https://linktr.ee/nathan_shipley) transformed animated figures and paintings into real life. Check out his amazing work on his [twitter page](https://twitter.com/citizenplain?lang=en) and [website](http://www.nathanshipley.com/gan).   
+
+**Deploying pSp with StyleSpace for Editing**  
+Awesome work from [Justin Pinkney](https://www.justinpinkney.com/) who deployed our pSp model on Runway and provided support for editing the resulting inversions using the [StyleSpace Analysis paper](https://arxiv.org/abs/2011.12799). Check out his repository [here](https://github.com/justinpinkney/pixel2style2pixel).
+
+**Encoder4Editing (e4e)**   
+Building on the work of pSp, Tov et al. design an encoder to enable high quality edits on real images. Check out their [paper](https://arxiv.org/abs/2102.02766) and [code](https://github.com/omertov/encoder4editing).
+
+**Style-based Age Manipulation (SAM)**  
+Leveraging pSp and the rich semantics of StyleGAN, SAM learns non-linear latent space paths for modeling the age transformation of real face images. Check out the project page [here](https://yuval-alaluf.github.io/SAM/).
+
+**ReStyle**  
+ReStyle builds on recent encoders such as pSp and e4e by introducing an iterative refinment mechanism to gradually improve the inversion of real images. Check out the project page [here](https://yuval-alaluf.github.io/restyle-encoder/).
+
+## pSp in the Media
+* bycloud: [AI Generates Cartoon Characters In Real Life Pixel2Style2Pixel](https://www.youtube.com/watch?v=g-N8lfceclI&ab_channel=bycloud)
+* Synced: [Pixel2Style2Pixel: Novel Encoder Architecture Boosts Facial Image-To-Image Translation](https://syncedreview.com/2020/08/07/pixel2style2pixel-novel-encoder-architecture-boosts-facial-image-to-image-translation/)
+* Cartoon Brew: [An Artist Has Used Machine Learning To Turn Animated Characters Into Creepy Photorealistic Figures](https://www.cartoonbrew.com/tech/an-artist-has-used-machine-learning-to-turn-animated-characters-into-creepy-photorealistic-figures-197975.html)
+
 
 ## Citation
 If you use this code for your research, please cite our paper <a href="https://arxiv.org/abs/2008.00951">Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation</a>:

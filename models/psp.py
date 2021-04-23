@@ -2,8 +2,9 @@
 This file defines the core research contribution
 """
 import matplotlib
-
 matplotlib.use('Agg')
+import math
+
 import torch
 from torch import nn
 from models.encoders import psp_encoders
@@ -23,9 +24,11 @@ class pSp(nn.Module):
 	def __init__(self, opts):
 		super(pSp, self).__init__()
 		self.set_opts(opts)
+		# compute number of style inputs based on the output resolution
+		self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
 		# Define architecture
 		self.encoder = self.set_encoder()
-		self.decoder = Generator(1024, 512, 8)
+		self.decoder = Generator(self.opts.output_size, 512, 8)
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
 		self.load_weights()
@@ -61,7 +64,7 @@ class pSp(nn.Module):
 			if self.opts.learn_in_w:
 				self.__load_latent_avg(ckpt, repeat=1)
 			else:
-				self.__load_latent_avg(ckpt, repeat=18)
+				self.__load_latent_avg(ckpt, repeat=self.opts.n_styles)
 
 	def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, alpha=None):
