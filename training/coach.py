@@ -31,6 +31,10 @@ class Coach:
 		# Initialize network
 		self.net = pSp(self.opts).to(self.device)
 
+		# Estimate latent_avg via dense sampling if latent_avg is not available
+		if self.net.latent_avg is None:
+			self.net.latent_avg = self.net.decoder.mean_latent(int(1e5))[0].detach()
+
 		# Initialize loss
 		if self.opts.id_lambda > 0 and self.opts.moco_lambda > 0:
 			raise ValueError('Both ID and MoCo loss have lambdas > 0! Please select only one to have non-zero lambda!')
