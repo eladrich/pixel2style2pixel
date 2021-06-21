@@ -267,6 +267,17 @@ Applying this MoCo-based similarity loss can be done by using the flag `--moco_l
 Please note, you <ins>cannot</ins> set both `id_lambda` and `moco_lambda` to be active simultaneously (e.g., to use the MoCo-based loss, you should specify, 
 `--moco_lambda=0.5 --id_lambda=0`).
 
+### Weights & Biases Integration
+To help track your experiments, we've integrated [Weights & Biases](https://wandb.ai/home) into our training process. 
+To enable Weights & Biases (`wandb`), first make an account on the platform's webpage and install `wandb` using 
+`pip install wandb`. Then, to train pSp using `wandb`, simply add the flag `--use_wandb`. 
+
+Note that when running for the first time, you will be asked to provide your access key which can be accessed via the
+Weights & Biases platform. 
+
+Using Weights & Biases will allow you to visualize the training and testing loss curves as well as 
+intermediate training results.
+
 
 ## Testing
 ### Inference
@@ -453,10 +464,11 @@ ReStyle builds on recent encoders such as pSp and e4e by introducing an iterativ
 If you use this code for your research, please cite our paper <a href="https://arxiv.org/abs/2008.00951">Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation</a>:
 
 ```
-@article{richardson2020encoding,
-  title={Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation},
-  author={Richardson, Elad and Alaluf, Yuval and Patashnik, Or and Nitzan, Yotam and Azar, Yaniv and Shapiro, Stav and Cohen-Or, Daniel},
-  journal={arXiv preprint arXiv:2008.00951},
-  year={2020}
+@InProceedings{richardson2021encoding,
+      author = {Richardson, Elad and Alaluf, Yuval and Patashnik, Or and Nitzan, Yotam and Azar, Yaniv and Shapiro, Stav and Cohen-Or, Daniel},
+      title = {Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation},
+      booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+      month = {June},
+      year = {2021}
 }
 ```

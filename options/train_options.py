@@ -44,6 +44,9 @@ class TrainOptions:
 		self.parser.add_argument('--val_interval', default=1000, type=int, help='Validation interval')
 		self.parser.add_argument('--save_interval', default=None, type=int, help='Model checkpoint interval')
 
+		# arguments for weights & biases support
+		self.parser.add_argument('--use_wandb', action="store_true", help='Whether to use Weights & Biases to track experiment.')
+
 		# arguments for super-resolution
 		self.parser.add_argument('--resize_factors', type=str, default=None, help='For super-res, comma-separated resize factors to use for inference.')
 
