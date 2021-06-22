@@ -1,0 +1,560 @@
+
+<html>
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+        <title>Encoding in Style | pSp</title>
+    
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+              integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link href="images/thumbnail.png"
+              rel="shortcut icon" type="image/x-icon"/>
+
+        <script type="text/javascript" src="jquery.mlens-1.0.min.js"></script>
+        <script type="text/javascript" src="jquery.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
+
+        <style>
+            body {
+                font-family: 'Open-Sans', sans-serif;
+                font-weight: 300;
+                background-color: #fff;
+            }
+    
+            .content {
+                width: 1000px;
+                padding: 25px 50px;
+                margin: 25px auto;
+                background-color: white;
+                box-shadow: 0px 0px 10px #999;
+                border-radius: 15px;
+            }
+    
+            .contentblock {
+                width: 950px;
+                margin: 0 auto;
+                padding: 0;
+                border-spacing: 25px 0;
+            }
+    
+            .contentblock td {
+                background-color: #fff;
+                padding: 25px 50px;
+                vertical-align: top;
+                box-shadow: 0px 0px 10px #999;
+                border-radius: 15px;
+            }
+    
+            a,
+            a:visited {
+                color: #224b8d;
+                font-weight: 300;
+            }
+    
+            #authors {
+                text-align: center;
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+    
+            #conference {
+                text-align: center;
+                margin-bottom: 20px;
+                font-style: italic;
+            }
+    
+            #authors a {
+                margin: 0 15px;
+            }
+    
+            h1 {
+                text-align: center;
+                font-size: 35px;
+                font-weight: 300;
+            }
+    
+            h2 {
+                font-size: 30px;
+                font-weight: 300;
+            }
+    
+            code {
+                display: block;
+                padding: 10px;
+                margin: 10px 10px;
+            }
+    
+            p {
+                line-height: 25px;
+                text-align: justify;
+            }
+    
+            p code {
+                display: inline;
+                padding: 0;
+                margin: 0;
+            }
+    
+            #teasers {
+                margin: 0 auto;
+            }
+    
+            #teasers td {
+                margin: 0 auto;
+                text-align: center;
+                padding: 5px;
+            }
+    
+            #teasers img {
+                width: 250px;
+            }
+    
+            #results img {
+                width: 133px;
+            }
+    
+            #seeintodark {
+                margin: 0 auto;
+            }
+    
+            #sift {
+                margin: 0 auto;
+            }
+    
+            #sift img {
+                width: 250px;
+            }
+    
+            .downloadpaper {
+                padding-left: 20px;
+                float: right;
+                text-align: center;
+            }
+    
+            .downloadpaper a {
+                font-weight: bold;
+                text-align: center;
+            }
+    
+            #demoframe {
+                border: 0;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+                height: 340px;
+            }
+    
+            #feedbackform {
+                border: 1px solid #ccc;
+                margin: 0 auto;
+                border-radius: 15px;
+            }
+    
+            #eyeglass {
+                height: 530px;
+            }
+    
+            #eyeglass #wrapper {
+                position: relative;
+                height: auto;
+                margin: 0 auto;
+                float: left;
+                width: 800px;
+            }
+    
+            #mitnews {
+                font-weight: normal;
+                margin-top: 20px;
+                font-size: 14px;
+                width: 220px;
+            }
+    
+            #mitnews a {
+                font-weight: normal;
+            }
+    
+            .teaser-img {
+                width: 80%;
+                            display: block;
+                            margin-left: auto;
+                            margin-right: auto;
+            }
+            .teaser-gif {
+                            display: block;
+                            margin-left: auto;
+                            margin-right: auto;
+            }
+            .summary-img {
+                width: 100%;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .small-img {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+    
+            .iframe {
+                width: 100%;
+                height: 125%
+            }
+
+            /* Three image containers (use 25% for four, and 50% for two, etc) */
+            .column {
+                float: center;
+                padding: 5px;
+            }
+
+            /* Clear floats after image containers */
+            .row::after {
+            content: "";
+            clear: both;
+            display: table;
+            }
+    
+          .container {
+            display: flex;
+            align-items: center;
+            justify-content: center
+          }
+          .image {
+            flex-basis: 40%
+          }
+          .text {
+            font-size: 20px;
+            padding-left: 20px;
+          }
+
+        .sidebar-social {
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar-social ul {
+            margin: 0;
+            padding: 0px;
+        }
+
+        .sidebar-social li {
+            text-align: center;
+            /* width: 20.5%; */
+            margin-bottom: 3px!important;
+            background-color: #fff;
+            /* border: 1px solid #eee; */
+            display: inline-block;
+            padding:0;
+            margin: 0px 35 0px 35;
+        }
+
+        .sidebar-social i {
+            display: block;
+            margin: 0px auto 0px auto;
+            width: 32px;
+            height: 32px;
+            margin: 0px auto 0px auto;
+            line-height: 32px;
+            font-size: 50px;
+            color: #224b8d;
+            margin-top:7px;
+            padding-top:7px;
+        }
+
+        .sidebar-social a{
+            text-decoration:none;
+            /* width:100%; */
+            /* height:100%; */
+            /* display:block; */
+            align-items: center;
+            justify-content: center;
+            margin:0;
+            padding:0;
+        }
+
+        .sidebar-social a span{
+            color:#224b8d;
+            font-size:22px;
+            padding:10px 0px 0px 10px;
+            display:block;
+            text-transform:bold;
+            /* font-family:'Josefin Sans'; */
+            letter-spacing:1px;
+        }
+
+        .w-embed-youtubevideo {
+            width: 100%;
+            position: relative;
+            padding-bottom: 0;
+            padding-left: 0;
+            padding-right: 0;
+            background-image: url(https://d3e54v103j8qbb.cloudfront.net/static/youtube-placeholder.2b05e7d68d.svg);
+            background-size: cover;
+            background-position: 50% 50%
+        }
+
+        .w-embed-youtubevideo:empty {
+            min-height: 75px;
+            padding-bottom: 56.25%
+        }
+
+        .code-holder{
+            overflow-x: scroll;
+        }
+        
+        .code-holder code{
+            white-space: nowrap;
+        }
+    
+        </style>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+            <!--
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-98008272-2"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+    
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', 'UA-98008272-2');
+        </script>
+        <script type="text/javascript" async
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML">
+        </script>
+            -->
+    
+    </head>
+    
+    <body>
+    
+        <div class="content">
+                <h1>Encoding in Style: A StyleGAN Encoder for Image-to-Image Translation</h1>
+            <p id="authors" style="font-size:15pt">
+                <a href="https://scholar.google.co.il/citations?user=9npMV2kAAAAJ&hl=en" target="_blank">Elad Richardson<sup>1</sup></a>
+                <a href="https://yuval-alaluf.github.io/" target="_blank">Yuval Alaluf<sup>1,2</sup></a>
+                <a href="https://orpatashnik.github.io/" target="_blank">Or Patashnik<sup>1,2</sup></a>
+                <a href="https://yotamnitzan.github.io/" target="_blank">Yotam Nitzan<sup>2</sup></a>
+            </p>
+            <p id="authors" style="font-size:15pt">
+                <a href="https://il.linkedin.com/in/yaniv-azar-b23b3969" target="_blank">Yaniv Azar<sup>1</sup></a>
+                <a href="" target="_blank">Stav Shapiro<sup>1</sup></a>
+                <a href="https://www.cs.tau.ac.il/~dcor/" target="_blank">Daniel Cohen-Or<sup>2</sup></a>
+            </p>
+            <p style="text-align:center; font-size:14pt"> 
+                Penta-AI<sup>1</sup> &nbsp;&nbsp;&nbsp;&nbsp;
+                Tel-Aviv University<sup>2</sup></p>
+            <br>
+
+            <div class="sidebar-social" style="text-align: center;">
+                <li><a href="https://arxiv.org/abs/2008.00951" title="Paper" target="_blank" rel="nofollow"><i class="far fa-3x fa-file text-primary mb-3"></i><span><b>Paper</b></span></a></li>
+                <li><a href="https://github.com/eladrich/pixel2style2pixel" title="Code" target="_blank" rel="nofollow"><i class="fab fa-3x fa-github text-primary mb-3"></i><span><b>Code</b></span></a></li>
+                <li><a href="https://colab.research.google.com/github/eladrich/pixel2style2pixel/blob/master/notebooks/inference_playground.ipynb" title="Colab" target="_blank" rel="nofollow"><i class="fas fa-code fa-4x text-primary mb-3"></i><span><b>&nbsp;&nbsp;&nbsp;Colab</b></span></a></li>
+                <li><a href="psp_poster.pdf" title="Bibtex" style="margin-left:10%"target="_blank" rel="nofollow"><i class="far fa-map fa-4x text-primary mb-3"></i><span><b>Poster</b></span></a></li>
+            </div>
+            
+            <p style="color: #224b8d; font-size: 18pt; text-align: center;"><b>CVPR 2021</b></p>
+
+            <p>
+                <img class='teaser-img' src='images/teaser.png' style='width:100%'></img>
+            </p>
+
+            <br>
+            <p><strong>Abstract: </strong>
+                We present a generic image-to-image translation framework, pixel2style2pixel (pSp). Our pSp framework is based on a 
+                novel encoder network that directly generates a series of style vectors which are fed into a pretrained StyleGAN generator, 
+                forming the extended W+ latent space. We first show that our encoder can directly embed real images into W+, with no 
+                additional optimization. Next, we propose utilizing our encoder to directly solve image-to-image translation tasks, 
+                defining them as encoding problems from some input domain into the latent domain. By deviating from the standard invert 
+                first, edit later methodology used with previous StyleGAN encoders, our approach can handle a variety of tasks even 
+                when the input image is not represented in the StyleGAN domain. We show that solving translation tasks through StyleGAN 
+                significantly simplifies the training process, as no adversary is required, has better support for solving tasks without 
+                pixel-to-pixel correspondence, and inherently supports multi-modal synthesis via the resampling of styles. Finally, 
+                we demonstrate the potential of our framework on a variety of facial image-to-image translation tasks, even when compared 
+                to state-of-the-art solutions designed specifically for a single task, and further show that it can be extended beyond the 
+                human facial domain.
+            </p>
+    
+            <br clear="all">
+        </div>
+
+        <div class="content" id="video">
+            <h2 style="text-align:center;">Video</h2>
+            <div class="w-embed-youtubevideo stega_movie youtube" id="w-node-e5e45b1d55ac-81500a5f"
+            style="padding-top:56.17021276595745%">
+           <iframe allow="autoplay; encrypted-media" allowfullscreen="" frameBorder="0"
+                   src="https://www.youtube.com/embed/bfvSwhqsTgM?rel=1&amp;controls=1&amp;autoplay=0&amp;mute=0&amp;start=0"
+                   style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:auto"></iframe>
+            </div>
+        </div>
+
+        <div class="content" id="samples">
+    
+            <h2 style="text-align:center;">Overview</h2>
+    
+                    <div class="container">
+                        <div class="text" style="text-align: center;">
+                            <p>
+                                The pixel2style2pixel (pSp) framework provides a fast and accurate solution for encoding real images into the latent space of a
+                                pretrained StyleGAN generator. The pSp framework can additionally be used to solve a wide variety of image-to-image translation tasks including
+                                multi-modal conditional image synthesis, facial frontalization, inpainting and super-resolution.
+                            </p>
+                        </div>
+                    </div>
+            <br>
+            <hr>
+            <p style="text-align: center;">
+                We introduce an encoder based on an FPN where style vectors are extracted from different pyramid scales and inserted directly into a fixed, pretrained StyleGAN generator in correspondence to their spatial scales.
+                Notably, during inference, pSp performs its inversion in a fraction of a second compared to several minutes per image when inverting using optimization techniques.
+            </p>
+
+            <figure class="half" style="display:flex;text-align:center; display: block; margin-left:auto; margin-right: auto">
+                <img width="100%" src="images/architecture.png">
+            </figure>
+
+            <hr>
+            <p style="text-align: center;">
+                Our key insight is that pSp can be applied to more general image-to-image translation tasks by directly encoding the input image
+                into the latent code corresponding to the desired output image. This allows one to manipulate images even when the input image cannot be 
+                encoded into the latent space of the pretrained StyleGAN.
+            </p>
+            <figure class="half" style="display:flex;text-align:center; display: block; margin-left:auto; margin-right: auto">
+                <img width="100%" src="images/psp_translation.png">
+            </figure>
+
+            <br>
+            <hr>
+            <p style="text-align: center;">
+                Translating images via intermediate style representation further allows one to leverage the rich latent space of StyleGAN. For example,
+                by resampling styles and mixing them with the original encoding we provide inherent support for multi-modal synthesis.
+            </p>
+            <figure class="half" style="display:flex;text-align:center; display: block; margin-left:auto; margin-right: auto">
+                <img width="100%" src="images/multi_modal_faces.jpg">
+            </figure>
+            <figure class="half" style="display:flex;text-align:center; display: block; margin-left:auto; margin-right: auto">
+                <img width="100%" src="images/multi_modal_dogs.png">
+            </figure>
+            
+                
+        </div>      
+
+        <div class="content" id="references">
+    
+            <h2 style="text-align:center;">Results</h2>
+
+            <p> 
+                Below we show animation results for each of the presented tasks. In each animation, we show the input image on the left 
+                followed by the generated output on the right.
+            </p>
+            <hr>
+
+            <h3>StyleGAN Encoding</h3>
+            <p>
+                Here, we use pSp to find the latent code of real images in the latent space of a pre-trained StyleGAN generator.
+            </p>    
+                <video style="margin-left: auto; margin-right: auto; display: block;" onloadeddata="this.play();" poster="poster.png" width="100%" playsinline loop muted controls>
+                    <source src="images/ffhq_encode_gif.mp4" type="video/mp4" />
+                    <source src="images/ffhq_encode_gif.mp4.webm" type="video/webm" />
+                    <source src="images/ffhq_encode_gif.mp4.ogg" type="video/ogg" />
+                    Your browser does not support the video tag or the file format of this video.
+                </video>
+            <!-- </span> -->
+            <hr>
+
+            <h3>Face Frontalization</h3>
+            <p>
+                In this application we use pSp to generate a front-facing face from a given input image of an arbitrary pose.
+            </p>    
+            <span class="center">
+                <video style="margin-left: auto; margin-right: auto; display: block;" onloadeddata="this.play();" poster="poster.png" width="100%" playsinline loop muted controls>
+                    <source src="images/ffhq_frontalize_gif.mp4" type="video/mp4" />
+                    <source src="images/ffhq_frontalize_gif.mp4.webm" type="video/webm" />
+                    <source src="images/ffhq_frontalize_gif.mp4.ogg" type="video/ogg" />
+                    Your browser does not support the video tag or the file format of this video.
+                </video>
+            </span>
+            <hr>
+
+            <h3>Conditional Image Synthesis</h3>
+            <p>
+                Here we wish to generate photo-realistic face images from ambiguous sketch images or segmentation maps. 
+                Using style-mixing on the fine-level styles, we inherently support mutli-modal synthesis for a single input.
+            </p>    
+            <span class="center">
+                <video style="margin-left: auto; margin-right: auto; display: block;" onloadeddata="this.play();" poster="poster.png" width="100%" playsinline loop muted controls>
+                    <source src="images/celebs_sketch_to_face_gif.mp4" type="video/mp4" />
+                    <source src="images/celebs_sketch_to_face_gif.mp4.webm" type="video/webm" />
+                    <source src="images/celebs_sketch_to_face_gif.mp4.ogg" type="video/ogg" />
+                    Your browser does not support the video tag or the file format of this video.
+                </video>
+            </span>
+            <br>
+            <span class="center">
+                <video style="margin-left: auto; margin-right: auto; display: block;" onloadeddata="this.play();" poster="poster.png" width="100%" playsinline loop muted controls>
+                    <source src="images/celebs_seg_to_face_gif.mp4" type="video/mp4" />
+                    <source src="images/celebs_seg_to_face_gif.mp4.webm" type="video/webm" />
+                    <source src="images/celebs_seg_to_face_gif.mp4.ogg" type="video/ogg" />
+                    Your browser does not support the video tag or the file format of this video.
+                </video>
+            </span>
+            <hr>
+
+            <h3>Super Resolution</h3>
+            <p>
+                Given a low-resolution input image, pSp can generate a corresponding high-resolution image. 
+            </p>    
+            <span class="center">
+                <video style="margin-left: auto; margin-right: auto; display: block;" onloadeddata="this.play();" poster="poster.png" width="100%" playsinline loop muted controls>
+                    <source src="images/celebs_super_resolution_gif.mp4" type="video/mp4" />
+                    <source src="images/celebs_super_resolution_gif.mp4.webm" type="video/webm" />
+                    <source src="images/celebs_super_resolution_gif.mp4.ogg" type="video/ogg" />
+                    Your browser does not support the video tag or the file format of this video.
+                </video>
+            </span>
+
+        </div>      
+
+        <div class="content" id="media">
+            <h2>pSp in the Media</h2>
+            <ul style="font-size: 13pt;">
+                <li>
+                    <a><b>Synced: </b></a>
+                    <a href="https://syncedreview.com/2020/08/07/pixel2style2pixel-novel-encoder-architecture-boosts-facial-image-to-image-translation" target="_blank">Pixel2Style2Pixel: Novel Encoder Architecture Boosts Facial Image-To-Image Translation</a>
+                </li>   
+                <li>
+                    <a><b>Cartoon Brew: </b></a>
+                    <a href="https://www.cartoonbrew.com/tech/an-artist-has-used-machine-learning-to-turn-animated-characters-into-creepy-photorealistic-figures-197975.html" target="_blank">An Artist Has Used Machine Learning To Turn Animated Characters Into Creepy Photorealistic Figures</a>
+                </li>
+                <li>
+                    <a><b>bycloud: </b></a>
+                    <a href="https://www.youtube.com/watch?v=g-N8lfceclI&ab_channel=bycloud" target="_blank">AI Generates Cartoon Characters In Real Life Pixel2Style2Pixel</a>
+                </li>
+        
+            </ul>
+        </div>
+
+        <div class="content" id="references">
+    
+            <h2>Reference</h2>
+            <div class="code-holder">
+            <code>
+                @InProceedings{richardson2021encoding, <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;author = {Richardson, Elad and Alaluf, Yuval and Patashnik, Or and Nitzan, Yotam and Azar, Yaniv and Shapiro, Stav and Cohen-Or, Daniel}, <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title = {Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation}, <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;month = {June}, <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;year = {2021} <br>
+                }
+            </code>
+            </div>
+        </div>      
+
+        <div class="content" id="references">
+            Website template is adopted from <a href="http://people.csail.mit.edu/lrchai/">Lucy Chai.</a>
+        </div>      
+
+    </body>
+    
+    </html>
+    
