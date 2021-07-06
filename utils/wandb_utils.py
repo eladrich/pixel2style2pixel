@@ -17,8 +17,10 @@ class WBLogger:
         wandb.run.summary["best-model-save-time"] = datetime.datetime.now()
 
     @staticmethod
-    def log(prefix, key, value, global_step):
-        wandb.log({f'{prefix}_{key}': value}, step=global_step)
+    def log(prefix, metrics_dict, global_step):
+        log_dict = {f'{prefix}_{key}': value for key, value in metrics_dict.items()}
+        log_dict["global_step"] = global_step
+        wandb.log(log_dict)
 
     @staticmethod
     def log_dataset_wandb(dataset, dataset_name, n_images=16):

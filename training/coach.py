@@ -244,8 +244,8 @@ class Coach:
 	def log_metrics(self, metrics_dict, prefix):
 		for key, value in metrics_dict.items():
 			self.logger.add_scalar(f'{prefix}/{key}', value, self.global_step)
-			if self.opts.use_wandb:
-				self.wb_logger.log(prefix, key, value, self.global_step)
+		if self.opts.use_wandb:
+			self.wb_logger.log(prefix, metrics_dict, self.global_step)
 
 	def print_metrics(self, metrics_dict, prefix):
 		print(f'Metrics for {prefix}, step {self.global_step}')
