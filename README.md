@@ -27,7 +27,9 @@ allow solving different image-to-image translation problems using its encoder.
 **`2020.10.06`**: Add pSp toonify model (Thanks to the great work from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/))!  
 **`2021.04.23`**: Added several new features: 
   - Added supported for StyleGANs of different resolutions (e.g., 256, 512, 1024). This can be set using the flag `--output_size`, which is set to 1024 by default. 
-  - Added support for the MoCo-Based similarity loss introduced in [encoder4editing (Tov et al. 2021)](https://github.com/omertov/encoder4editing). More details are provided [below](https://github.com/eladrich/pixel2style2pixel#training-psp).
+  - Added support for the MoCo-Based similarity loss introduced in [encoder4editing (Tov et al. 2021)](https://github.com/omertov/encoder4editing). More details are provided [below](https://github.com/eladrich/pixel2style2pixel#training-psp).  
+  
+**`2021.07.06`**: Added support for training with Weights & Biases. [See below for details](https://github.com/eladrich/pixel2style2pixel#weights--biases-integration).
 
 ## Applications
 ### StyleGAN Encoding
