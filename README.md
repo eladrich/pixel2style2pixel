@@ -267,6 +267,17 @@ Applying this MoCo-based similarity loss can be done by using the flag `--moco_l
 Please note, you <ins>cannot</ins> set both `id_lambda` and `moco_lambda` to be active simultaneously (e.g., to use the MoCo-based loss, you should specify, 
 `--moco_lambda=0.5 --id_lambda=0`).
 
+### Weights & Biases Integration
+To help track your experiments, we've integrated [Weights & Biases](https://wandb.ai/home) into our training process. 
+To enable Weights & Biases (`wandb`), first make an account on the platform's webpage and install `wandb` using 
+`pip install wandb`. Then, to train pSp using `wandb`, simply add the flag `--use_wandb`. 
+
+Note that when running for the first time, you will be asked to provide your access key which can be accessed via the
+Weights & Biases platform. 
+
+Using Weights & Biases will allow you to visualize the training and testing loss curves as well as 
+intermediate training results.
+
 
 ## Testing
 ### Inference

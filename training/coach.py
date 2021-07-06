@@ -28,6 +28,10 @@ class Coach:
 		self.device = 'cuda:0'  # TODO: Allow multiple GPU? currently using CUDA_VISIBLE_DEVICES
 		self.opts.device = self.device
 
+		if self.opts.use_wandb:
+			from utils.wandb_utils import WBLogger
+			self.wb_logger = WBLogger(self.opts)
+
 		# Initialize network
 		self.net = pSp(self.opts).to(self.device)
 
@@ -90,12 +94,15 @@ class Coach:
 				self.optimizer.step()
 
 				# Logging related
-				if self.global_step % self.opts.image_interval == 0 or (
-						self.global_step < 1000 and self.global_step % 25 == 0):
+				if self.global_step % self.opts.image_interval == 0 or (self.global_step < 1000 and self.global_step % 25 == 0):
 					self.parse_and_log_images(id_logs, x, y, y_hat, title='images/train/faces')
 				if self.global_step % self.opts.board_interval == 0:
 					self.print_metrics(loss_dict, prefix='train')
 					self.log_metrics(loss_dict, prefix='train')
+
+				# Log images of first batch to wandb
+				if self.opts.use_wandb and batch_idx == 0:
+					self.wb_logger.log_images_to_wandb(x, y, y_hat, id_logs, prefix="train", step=self.global_step, opts=self.opts)
 
 				# Validation related
 				val_loss_dict = None
@@ -134,6 +141,10 @@ class Coach:
 									  title='images/test/faces',
 									  subscript='{:04d}'.format(batch_idx))
 
+			# Log images of first batch to wandb
+			if self.opts.use_wandb and batch_idx == 0:
+				self.wb_logger.log_images_to_wandb(x, y, y_hat, id_logs, prefix="test", step=self.global_step, opts=self.opts)
+
 			# For first step just do sanity test on small amount of data
 			if self.global_step == 0 and batch_idx >= 4:
 				self.net.train()
@@ -147,15 +158,17 @@ class Coach:
 		return loss_dict
 
 	def checkpoint_me(self, loss_dict, is_best):
-		save_name = 'best_model.pt' if is_best else 'iteration_{}.pt'.format(self.global_step)
+		save_name = 'best_model.pt' if is_best else f'iteration_{self.global_step}.pt'
 		save_dict = self.__get_save_dict()
 		checkpoint_path = os.path.join(self.checkpoint_dir, save_name)
 		torch.save(save_dict, checkpoint_path)
 		with open(os.path.join(self.checkpoint_dir, 'timestamp.txt'), 'a') as f:
 			if is_best:
-				f.write('**Best**: Step - {}, Loss - {:.3f} \n{}\n'.format(self.global_step, self.best_val_loss, loss_dict))
+				f.write(f'**Best**: Step - {self.global_step}, Loss - {self.best_val_loss} \n{loss_dict}\n')
+				if self.opts.use_wandb:
+					self.wb_logger.log_best_model()
 			else:
-				f.write('Step - {}, \n{}\n'.format(self.global_step, loss_dict))
+				f.write(f'Step - {self.global_step}, \n{loss_dict}\n')
 
 	def configure_optimizers(self):
 		params = list(self.net.encoder.parameters())
@@ -169,8 +182,8 @@ class Coach:
 
 	def configure_datasets(self):
 		if self.opts.dataset_type not in data_configs.DATASETS.keys():
-			Exception('{} is not a valid dataset_type'.format(self.opts.dataset_type))
-		print('Loading dataset for {}'.format(self.opts.dataset_type))
+			Exception(f'{self.opts.dataset_type} is not a valid dataset_type')
+		print(f'Loading dataset for {self.opts.dataset_type}')
 		dataset_args = data_configs.DATASETS[self.opts.dataset_type]
 		transforms_dict = dataset_args['transforms'](self.opts).get_transforms()
 		train_dataset = ImagesDataset(source_root=dataset_args['train_source_root'],
@@ -183,8 +196,11 @@ class Coach:
 									 source_transform=transforms_dict['transform_source'],
 									 target_transform=transforms_dict['transform_test'],
 									 opts=self.opts)
-		print("Number of training samples: {}".format(len(train_dataset)))
-		print("Number of test samples: {}".format(len(test_dataset)))
+		if self.opts.use_wandb:
+			self.wb_logger.log_dataset_wandb(train_dataset, dataset_name="Train")
+			self.wb_logger.log_dataset_wandb(test_dataset, dataset_name="Test")
+		print(f"Number of training samples: {len(train_dataset)}")
+		print(f"Number of test samples: {len(test_dataset)}")
 		return train_dataset, test_dataset
 
 	def calc_loss(self, x, y, y_hat, latent):
@@ -227,12 +243,14 @@ class Coach:
 
 	def log_metrics(self, metrics_dict, prefix):
 		for key, value in metrics_dict.items():
-			self.logger.add_scalar('{}/{}'.format(prefix, key), value, self.global_step)
+			self.logger.add_scalar(f'{prefix}/{key}', value, self.global_step)
+		if self.opts.use_wandb:
+			self.wb_logger.log(prefix, metrics_dict, self.global_step)
 
 	def print_metrics(self, metrics_dict, prefix):
-		print('Metrics for {}, step {}'.format(prefix, self.global_step))
+		print(f'Metrics for {prefix}, step {self.global_step}')
 		for key, value in metrics_dict.items():
-			print('\t{} = '.format(key), value)
+			print(f'\t{key} = ', value)
 
 	def parse_and_log_images(self, id_logs, x, y, y_hat, title, subscript=None, display_count=2):
 		im_data = []
@@ -254,9 +272,9 @@ class Coach:
 		if log_latest:
 			step = 0
 		if subscript:
-			path = os.path.join(self.logger.log_dir, name, '{}_{:04d}.jpg'.format(subscript, step))
+			path = os.path.join(self.logger.log_dir, name, f'{subscript}_{step:04d}.jpg')
 		else:
-			path = os.path.join(self.logger.log_dir, name, '{:04d}.jpg'.format(step))
+			path = os.path.join(self.logger.log_dir, name, f'{step:04d}.jpg')
 		os.makedirs(os.path.dirname(path), exist_ok=True)
 		fig.savefig(path)
 		plt.close(fig)
