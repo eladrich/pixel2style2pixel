@@ -1,10 +1,7 @@
 import cog
 import tempfile
 from pathlib import Path
-import shutil
-import os
 from argparse import Namespace
-import time
 import sys
 import pprint
 import numpy as np
@@ -18,15 +15,16 @@ sys.path.append("..")
 from datasets import augmentations
 from utils.common import tensor2im, log_input_image
 from models.psp import pSp
+import dlib
+from scripts.align_all_parallel import align_face
 
 
 class Predictor(cog.Predictor):
     def setup(self):
+        self.predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
         model_paths = {
-            "ffhq_encode": "pretrained_models/psp_ffhq_encode.pt",
             "ffhq_frontalize": "pretrained_models/psp_ffhq_frontalization.pt",
             "celebs_sketch_to_face": "pretrained_models/psp_celebs_sketch_to_face.pt",
-            "celebs_seg_to_face": "pretrained_models/psp_celebs_seg_to_face.pt",
             "celebs_super_resolution": "pretrained_models/psp_celebs_super_resolution.pt",
             "toonify": "pretrained_models/psp_ffhq_toonify.pt"
         }
@@ -53,7 +51,7 @@ class Predictor(cog.Predictor):
 
         self.transforms = {}
         for key in model_paths.keys():
-            if key in ['ffhq_encode', 'ffhq_frontalize', 'toonify']:
+            if key in ['ffhq_frontalize', 'toonify']:
                 self.transforms[key] = transforms.Compose([
                     transforms.Resize((256, 256)),
                     transforms.ToTensor(),
@@ -61,11 +59,6 @@ class Predictor(cog.Predictor):
             elif key == 'celebs_sketch_to_face':
                 self.transforms[key] = transforms.Compose([
                     transforms.Resize((256, 256)),
-                    transforms.ToTensor()])
-            elif key == 'celebs_seg_to_face':
-                self.transforms[key] = transforms.Compose([
-                    transforms.Resize((256, 256)),
-                    augmentations.ToOneHot(n_classes=19),
                     transforms.ToTensor()])
             elif key == 'celebs_super_resolution':
                 self.transforms[key] = transforms.Compose([
@@ -75,16 +68,14 @@ class Predictor(cog.Predictor):
                     transforms.ToTensor(),
                     transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 
-
-    @cog.input("model", type=str, options=["celebs_seg_to_face", "celebs_sketch_to_face", "ffhq_encode",
-                                                "ffhq_frontalize", "celebs_super_resolution", "toonify"],
+    @cog.input("model", type=str,
+               options=["celebs_sketch_to_face", "ffhq_frontalize", "celebs_super_resolution", "toonify"],
                help="choose model type")
     @cog.input("image", type=Path, help="input facial image")
     def predict(self, model, image):
         opts = self.opts[model]
         opts = Namespace(**opts)
         pprint.pprint(opts)
-
 
         net = pSp(opts)
         net.eval()
@@ -96,11 +87,11 @@ class Predictor(cog.Predictor):
             original_image = original_image.convert("RGB")
         else:
             original_image = original_image.convert("L")
-        original_image.resize((256, 256))
+        original_image.resize((self.opts[model]['output_size'], self.opts[model]['output_size']))
 
         # Align Image
         if model not in ["celebs_sketch_to_face", "celebs_seg_to_face"]:
-            input_image = run_alignment(str(image))
+            input_image = self.run_alignment(str(image))
         else:
             input_image = original_image
 
@@ -118,23 +109,19 @@ class Predictor(cog.Predictor):
         output_image = tensor2im(result_image)
 
         if model == "celebs_super_resolution":
-            res = np.concatenate([np.array(input_vis_image.resize((256, 256))),
-                                  np.array(output_image.resize((256, 256)))], axis=1)
+            res = np.concatenate([np.array(input_vis_image.resize((self.opts[model]['output_size'], self.opts[model]['output_size']))),
+                                  np.array(output_image.resize((self.opts[model]['output_size'], self.opts[model]['output_size'])))], axis=1)
         else:
-            res = np.array(output_image.resize((256, 256)))
+            res = np.array(output_image.resize((self.opts[model]['output_size'], self.opts[model]['output_size'])))
 
         out_path = Path(tempfile.mkdtemp()) / "out.png"
         Image.fromarray(np.array(res)).save(str(out_path))
         return out_path
 
-
-def run_alignment(image_path):
-    import dlib
-    from scripts.align_all_parallel import align_face
-    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-    aligned_image = align_face(filepath=image_path, predictor=predictor)
-    print("Aligned image has shape: {}".format(aligned_image.size))
-    return aligned_image
+    def run_alignment(self, image_path):
+        aligned_image = align_face(filepath=image_path, predictor=self.predictor)
+        print("Aligned image has shape: {}".format(aligned_image.size))
+        return aligned_image
 
 
 def run_on_batch(inputs, net, latent_mask=None):
@@ -151,7 +138,8 @@ def run_on_batch(inputs, net, latent_mask=None):
             # get output image with injected style vector
             res = net(input_image.unsqueeze(0).to("cuda").float(),
                       latent_mask=latent_mask,
-                      inject_latent=latent_to_inject)
+                      inject_latent=latent_to_inject,
+                      resize=False)
             result_batch.append(res)
         result_batch = torch.cat(result_batch, dim=0)
     return result_batch
