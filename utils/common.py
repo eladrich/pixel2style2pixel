@@ -14,12 +14,17 @@ def log_input_image(x, opts):
 		return tensor2map(x)
 
 
-def tensor2im(var):
+def tensor2im(var, normalize=True):
 	var = var.cpu().detach().transpose(0, 2).transpose(0, 1).numpy()
-	var = ((var + 1) / 2)
-	var[var < 0] = 0
-	var[var > 1] = 1
+	if normalize:
+		var = ((var + 1) / 2)
+		var[var < 0] = 0
+		var[var > 1] = 1
 	var = var * 255
+
+	if var.shape[-1] == 1:
+		var = var[..., 0]
+
 	return Image.fromarray(var.astype('uint8'))
 
 
@@ -80,8 +85,8 @@ def vis_faces_no_id(hooks_dict, fig, gs, i):
 	plt.imshow(hooks_dict['input_face'], cmap="gray")
 	plt.title('Input')
 	fig.add_subplot(gs[i, 1])
-	plt.imshow(hooks_dict['target_face'])
+	plt.imshow(hooks_dict['target_face'], cmap="gray")
 	plt.title('Target')
 	fig.add_subplot(gs[i, 2])
-	plt.imshow(hooks_dict['output_face'])
+	plt.imshow(hooks_dict['output_face'], cmap="gray")
 	plt.title('Output')

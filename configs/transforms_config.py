@@ -9,6 +9,16 @@ class TransformsConfig(object):
     def __init__(self, opts):
         self.opts = opts
 
+        if self.opts.input_nc == 1:
+            self.normalization_vec_source = 0.5
+        else:
+            self.normalization_vec_source = [0.5, 0.5, 0.5]
+
+        if self.opts.label_nc == 1:
+            self.normalization_vec_target = 0.5
+        else:
+            self.normalization_vec_target = [0.5, 0.5, 0.5]
+
     @abstractmethod
     def get_transforms(self):
         pass
@@ -19,21 +29,22 @@ class EncodeTransforms(TransformsConfig):
         super(EncodeTransforms, self).__init__(opts)
 
     def get_transforms(self):
+
         transforms_dict = {
             'transform_gt_train': transforms.Compose([
                 transforms.Resize((256, 256)),
-                transforms.RandomHorizontalFlip(0.5),
+                # transforms.RandomHorizontalFlip(0.5),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': None,
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+                transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)])
         }
         return transforms_dict
 
@@ -48,20 +59,20 @@ class FrontalizationTransforms(TransformsConfig):
                 transforms.Resize((256, 256)),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)]),
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+                transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)])
         }
         return transforms_dict
 
@@ -75,14 +86,14 @@ class SketchToImageTransforms(TransformsConfig):
             'transform_gt_train': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor()]),
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor()]),
@@ -99,7 +110,7 @@ class SegToImageTransforms(TransformsConfig):
             'transform_gt_train': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': transforms.Compose([
                 transforms.Resize((256, 256)),
                 augmentations.ToOneHot(self.opts.label_nc),
@@ -107,7 +118,7 @@ class SegToImageTransforms(TransformsConfig):
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 augmentations.ToOneHot(self.opts.label_nc),
@@ -129,23 +140,23 @@ class SuperResTransforms(TransformsConfig):
             'transform_gt_train': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': transforms.Compose([
                 transforms.Resize((256, 256)),
                 augmentations.BilinearResize(factors=factors),
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)]),
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 augmentations.BilinearResize(factors=factors),
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+                transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)])
         }
         return transforms_dict
 
@@ -159,18 +170,20 @@ class MntToFingerTransforms(TransformsConfig):
             'transform_gt_train': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_source': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                # transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)
+            ]),
             'transform_test': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize(self.normalization_vec_target, self.normalization_vec_target)]),
             'transform_inference': transforms.Compose([
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+                # transforms.Normalize(self.normalization_vec_source, self.normalization_vec_source)
+            ])
         }
         return transforms_dict

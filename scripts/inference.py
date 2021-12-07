@@ -83,7 +83,7 @@ def run():
         for i in range(opts.test_batch_size):
             result = tensor2im(result_batch[i])
             im_path = dataset.paths[global_i]
-            input_im = log_input_image(input_batch[i], opts)
+            input_im = tensor2im(input_batch[i])
 
             if opts.couple_outputs:
                 resize_amount = (256, 256) if opts.resize_outputs else (1024, 1024)

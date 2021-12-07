@@ -10,6 +10,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
+import torchvision.transforms as transforms
 
 from utils import common, train_utils
 from criteria import id_loss, w_norm
@@ -41,7 +42,7 @@ class Coach:
         if self.opts.w_norm_lambda > 0:
             self.w_norm_loss = w_norm.WNormLoss(start_from_latent_avg=self.opts.start_from_latent_avg)
         if self.opts.fingernet_lambda > 0:
-            self.fingernet_loss = FingerNetLoss().to(self.device).eval()
+            self.fingernet_loss = FingerNetLoss(opts.label_nc).to(self.device).eval()
         self.mse_loss = nn.MSELoss().to(self.device).eval()
 
         # Initialize optimizer
@@ -86,8 +87,8 @@ class Coach:
 
                 # Logging related
                 if self.global_step % self.opts.image_interval == 0 or (
-                                self.global_step < 1000 and self.global_step % 25 == 0):
-                    self.parse_and_log_images(id_logs, x, y, y_hat, title='images/train/faces')
+                                self.global_step < 1000 and self.global_step % 250 == 0):
+                    self.parse_and_log_images(id_logs, x, y, y_hat, title='images/train')
                 if self.global_step % self.opts.board_interval == 0:
                     self.print_metrics(loss_dict, prefix='train')
                     self.log_metrics(loss_dict, prefix='train')
@@ -126,7 +127,7 @@ class Coach:
 
             # Logging related
             self.parse_and_log_images(id_logs, x, y, y_hat,
-                                      title='images/test/faces',
+                                      title='images/test',
                                       subscript='{:04d}'.format(batch_idx))
 
             # For first step just do sanity test on small amount of data
@@ -232,11 +233,16 @@ class Coach:
 
     def parse_and_log_images(self, id_logs, x, y, y_hat, title, subscript=None, display_count=2):
         im_data = []
+        normalize_source = transforms.Normalize in [transform.__class__ for transform in
+                                                    self.train_dataset.source_transform.transforms]
+        normalize_target = transforms.Normalize in [transform.__class__ for transform in
+                                                    self.train_dataset.target_transform.transforms]
         for i in range(display_count):
             cur_im_data = {
-                'input_face': common.log_input_image(x[i], self.opts),
-                'target_face': common.tensor2im(y[i]),
-                'output_face': common.tensor2im(y_hat[i]),
+                # 'input_face': common.log_input_image(x[i], self.opts),
+                'input_face': common.tensor2im(x[i], normalize=normalize_source),
+                'target_face': common.tensor2im(y[i], normalize=normalize_target),
+                'output_face': common.tensor2im(y_hat[i], normalize=normalize_target),
             }
             if id_logs is not None:
                 for key in id_logs[i]:

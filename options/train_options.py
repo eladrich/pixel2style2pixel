@@ -16,6 +16,7 @@ class TrainOptions:
 		self.parser.add_argument('--label_nc', default=0, type=int, help='Number of input label channels to the psp encoder')
 		self.parser.add_argument('--generator_image_size', default=1024, type=int, help='Image size for stylegan2 generator')
 		self.parser.add_argument('--style_count', default=18, type=int, help='Number of style vectors')
+		self.parser.add_argument('--is_gray', default=False, type=bool, help='generate greyscale output')
 
 		self.parser.add_argument('--batch_size', default=4, type=int, help='Batch size for training')
 		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')
