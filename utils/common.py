@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 
 # Log images
-def log_input_image(x, opts):
-	if opts.label_nc == 0:
+def log_input_image(x, label_nc):
+	if label_nc == 0:
 		return tensor2im(x)
-	elif opts.label_nc == 1:
+	elif label_nc == 1:
 		return tensor2sketch(x)
 	else:
 		return tensor2map(x)

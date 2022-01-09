@@ -1,0 +1,19 @@
+task:
+  dataset_type: ffhq_frontalize
+  encoder_type: GradualStyleEncoder
+  start_from_latent_avg: True
+loss: 
+  lpips_lambda: 0.08 
+  l2_lambda: 0.001 
+  lpips_lambda_crop: 0.8 
+  l2_lambda_crop: 0.01 
+  id_lambda: 1 
+  w_norm_lambda: 0.005
+compute:
+  workers: 8
+  test_workers: 8
+  batch_size: 8
+  test_batch_size: 8
+log:
+  val_interval: 2500
+  save_interval: 5000

@@ -1,11 +1,16 @@
-# Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation
+# Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation - The Pyrallis Version
 <a href="https://arxiv.org/abs/2008.00951"><img src="https://img.shields.io/badge/arXiv-2008.00951-b31b1b.svg" height=22.5></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" height=22.5></a>  
+
+
 
 <a href="https://www.youtube.com/watch?v=bfvSwhqsTgM"><img src="https://img.shields.io/static/v1?label=CVPR 2021&message=5 Minute Video&color=red" height=22.5></a>  
 <a href="https://replicate.ai/eladrich/pixel2style2pixel"><img src="https://img.shields.io/static/v1?label=Replicate&message=Demo and Docker Image&color=darkgreen" height=22.5></a>
 
-<a href="http://colab.research.google.com/github/eladrich/pixel2style2pixel/blob/master/notebooks/inference_playground.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" height=22.5></a>  
+
+Hi! Welcome to our `pyrallis` branch :grin:
+
+This branch contains an adaptation of our `pSp` code, refactored to work with our [`pyrallis`](https://eladrich.github.io/pyrallis/) configuration library. We encourage you to take a look at  `coach.py` and `options/` to see how working with `pyrallis` differs from vanilla `argparse` based configurations.
 
 > We present a generic image-to-image translation framework, pixel2style2pixel (pSp). 
 Our pSp framework is based on a novel encoder network that directly generates a series of style vectors which are fed into a pretrained StyleGAN generator, 
@@ -24,7 +29,9 @@ The proposed pixel2style2pixel framework can be used to solve a wide variety of 
 
 ## Description   
 Official Implementation of our pSp paper for both training and evaluation. The pSp method extends the StyleGAN model to 
-allow solving different image-to-image translation problems using its encoder.
+allow solving different image-to-image translation problems using its encoder. 
+
+
 
 ## Recent Updates
 **`2020.10.04`**: Initial code release  
@@ -34,6 +41,10 @@ allow solving different image-to-image translation problems using its encoder.
   - Added support for the MoCo-Based similarity loss introduced in [encoder4editing (Tov et al. 2021)](https://github.com/omertov/encoder4editing). More details are provided [below](https://github.com/eladrich/pixel2style2pixel#training-psp).  
   
 **`2021.07.06`**: Added support for training with Weights & Biases. [See below for details](https://github.com/eladrich/pixel2style2pixel#weights--biases-integration).
+
+**`2022.01.09`**: Added pyrallis support
+
+
 
 ## Applications
 ### StyleGAN Encoding
@@ -153,125 +164,49 @@ Intermediate training results are saved to `opts.exp_dir`. This includes checkpo
 Additionally, if you have tensorboard installed, you can visualize tensorboard logs in `opts.exp_dir/logs`.
 
 #### **Training the pSp Encoder**
-```
-python scripts/train.py \
---dataset_type=ffhq_encode \
---exp_dir=/path/to/experiment \
---workers=8 \
---batch_size=8 \
---test_batch_size=8 \
---test_workers=8 \
---val_interval=2500 \
---save_interval=5000 \
---encoder_type=GradualStyleEncoder \
---start_from_latent_avg \
---lpips_lambda=0.8 \
---l2_lambda=1 \
---id_lambda=0.1
+```console
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/encode.yaml
 ```
 
 #### **Frontalization**
-```
-python scripts/train.py \
---dataset_type=ffhq_frontalize \
---exp_dir=/path/to/experiment \
---workers=8 \
---batch_size=8 \
---test_batch_size=8 \
---test_workers=8 \
---val_interval=2500 \
---save_interval=5000 \
---encoder_type=GradualStyleEncoder \
---start_from_latent_avg \
---lpips_lambda=0.08 \
---l2_lambda=0.001 \
---lpips_lambda_crop=0.8 \
---l2_lambda_crop=0.01 \
---id_lambda=1 \
---w_norm_lambda=0.005
+```console
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/frontalization.yaml
 ```
 
 #### **Sketch to Face**
-```
-python scripts/train.py \
---dataset_type=celebs_sketch_to_face \
---exp_dir=/path/to/experiment \
---workers=8 \
---batch_size=8 \
---test_batch_size=8 \
---test_workers=8 \
---val_interval=2500 \
---save_interval=5000 \
---encoder_type=GradualStyleEncoder \
---start_from_latent_avg \
---lpips_lambda=0.8 \
---l2_lambda=1 \
---id_lambda=0 \
---w_norm_lambda=0.005 \
---label_nc=1 \
---input_nc=1
+```console
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/sketch2face.yaml
 ```
 
 #### **Segmentation Map to Face**
+```console
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/seg2face.yaml
 ```
-python scripts/train.py \
---dataset_type=celebs_seg_to_face \
---exp_dir=/path/to/experiment \
---workers=8 \
---batch_size=8 \
---test_batch_size=8 \
---test_workers=8 \
---val_interval=2500 \
---save_interval=5000 \
---encoder_type=GradualStyleEncoder \
---start_from_latent_avg \
---lpips_lambda=0.8 \
---l2_lambda=1 \
---id_lambda=0 \
---w_norm_lambda=0.005 \
---label_nc=19 \
---input_nc=19
-```
-Notice with conditional image synthesis no identity loss is utilized (i.e. `--id_lambda=0`)
+Notice with conditional image synthesis no identity loss is utilized (i.e. `--loss.id_lambda=0`)
 
 #### **Super Resolution**
-``` 
-python scripts/train.py \
---dataset_type=celebs_super_resolution \
---exp_dir=/path/to/experiment \
---workers=8 \
---batch_size=8 \
---test_batch_size=8 \
---test_workers=8 \
---val_interval=2500 \
---save_interval=5000 \
---encoder_type=GradualStyleEncoder \
---start_from_latent_avg \
---lpips_lambda=0.8 \
---l2_lambda=1 \
---id_lambda=0.1 \
---w_norm_lambda=0.005 \
---resize_factors=1,2,4,8,16,32
+```console
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/superres.yaml
 ```
 
 ### Additional Notes
 - See `options/train_options.py` for all training-specific flags. 
 - See `options/test_options.py` for all test-specific flags.
-- If you wish to resume from a specific checkpoint (e.g. a pretrained pSp model), you may do so using `--checkpoint_path`.
-- By default, we assume that the StyleGAN used outputs images at resolution `1024x1024`. If you wish to use a StyleGAN at a smaller resolution, you can do so by using the flag `--output_size` (e.g., `--output_size=256`). 
-- If you wish to generate images from segmentation maps, please specify `--label_nc=N`  and `--input_nc=N` where `N` 
+- If you wish to resume from a specific checkpoint (e.g. a pretrained pSp model), you may do so using `--task.checkpoint_path`.
+- By default, we assume that the StyleGAN used outputs images at resolution `1024x1024`. If you wish to use a StyleGAN at a smaller resolution, you can do so by using the flag `--task.output_size` (e.g., `--task.output_size=256`). 
+- If you wish to generate images from segmentation maps, please specify `--task.label_nc=N`  and `--task.input_nc=N` where `N` 
 is the number of semantic categories. 
-- Similarly, for generating images from sketches, please specify `--label_nc=1` and `--input_nc=1`.
-- Specifying `--label_nc=0` (the default value), will directly use the RGB colors as input.
+- Similarly, for generating images from sketches, please specify `--task.label_nc=1` and `--task.input_nc=1`.
+- Specifying `--task.label_nc=0` (the default value), will directly use the RGB colors as input.
 
 **Identity/Similarity Losses**  
 In pSp, we introduce a facial identity loss using a pre-trained ArcFace network for facial recognition. When operating on the human facial domain, we 
-highly recommend employing this loss objective by using the flag `--id_lambda`.  
+highly recommend employing this loss objective by using the flag `--loss.id_lambda`.  
 In a more recent paper, [encoder4editing](https://github.com/omertov/encoder4editing), the authors generalize this identity loss to other domains by 
 using a MoCo-based ResNet to extract features instead of an ArcFace network.
-Applying this MoCo-based similarity loss can be done by using the flag `--moco_lambda`. We recommend setting `--moco_lambda=0.5` in your experiments.  
+Applying this MoCo-based similarity loss can be done by using the flag `--loss.moco_lambda`. We recommend setting `--loss.moco_lambda=0.5` in your experiments.  
 Please note, you <ins>cannot</ins> set both `id_lambda` and `moco_lambda` to be active simultaneously (e.g., to use the MoCo-based loss, you should specify, 
-`--moco_lambda=0.5 --id_lambda=0`).
+`--loss.moco_lambda=0.5 --loss.id_lambda=0`).
 
 ### Weights & Biases Integration
 To help track your experiments, we've integrated [Weights & Biases](https://wandb.ai/home) into our training process. 
@@ -303,7 +238,7 @@ Additional notes to consider:
 test options passed to the inference script. For example, there is no need to pass `--dataset_type` or `--label_nc` to the 
  inference script, as they are taken from the loaded `opts`.
 - When running inference for segmentation-to-image or sketch-to-image, it is highly recommend to do so with a style-mixing,
-as is done in the paper. This can simply be done by adding `--latent_mask=8,9,10,11,12,13,14,15,16,17` when calling the 
+as is done in the paper. This can simply be done by adding `--latent_mask=[8,9,10,11,12,13,14,15,16,17]` when calling the 
 script.
 - When running inference for super-resolution, please provide a single down-sampling value using `--resize_factors`.
 - Adding the flag `--couple_outputs` will save an additional image containing the input and output images side-by-side in the sub-directory
@@ -325,7 +260,7 @@ python scripts/style_mixing.py \
 --test_workers=4 \
 --n_images=25 \
 --n_outputs_to_generate=5 \
---latent_mask=8,9,10,11,12,13,14,15,16,17
+--latent_mask=[8,9,10,11,12,13,14,15,16,17]
 ``` 
 Here, we inject `5` randomly drawn vectors and perform style-mixing on the latents `[8,9,10,11,12,13,14,15,16,17]`.  
 
@@ -338,30 +273,6 @@ input latent and the randomly drawn latent.
 - By default, the images will be saved at resolutiosn of 1024x1024, the original output size of StyleGAN. If you wish to save 
 outputs resized to resolutions of 256x256, you can do so by adding the flag `--resize_outputs`.
 
-
-### Computing Metrics
-Similarly, given a trained model and generated outputs, we can compute the loss metrics on a given dataset.  
-These scripts receive the inference output directory and ground truth directory.
-- Calculating the identity loss: 
-```
-python scripts/calc_id_loss_parallel.py \
---data_path=/path/to/experiment/inference_outputs \
---gt_path=/path/to/test_images \
-```
-- Calculating LPIPS loss:
-```
-python scripts/calc_losses_on_images.py \
---mode lpips
---data_path=/path/to/experiment/inference_outputs \
---gt_path=/path/to/test_images \
-```
-- Calculating L2 loss:
-```
-python scripts/calc_losses_on_images.py \
---mode l2
---data_path=/path/to/experiment/inference_outputs \
---gt_path=/path/to/test_images \
-```
 
 ## Additional Applications
 To better show the flexibility of our pSp framework we present additional applications below.

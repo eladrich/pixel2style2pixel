@@ -1,30 +1,27 @@
 """
 This file runs the main training/val loop
 """
-import os
-import json
 import sys
-import pprint
+
+import pyrallis
 
 sys.path.append(".")
 sys.path.append("..")
 
-from options.train_options import TrainOptions
+from options.train_options import TrainConfig
 from training.coach import Coach
 
+@pyrallis.wrap()
+def main(cfg: TrainConfig):
+	if cfg.log.exp_dir.exists():
+		raise Exception('Oops... {} already exists'.format(cfg.log.exp_dir))
+	cfg.log.exp_dir.mkdir(parents=True)
 
-def main():
-	opts = TrainOptions().parse()
-	if os.path.exists(opts.exp_dir):
-		raise Exception('Oops... {} already exists'.format(opts.exp_dir))
-	os.makedirs(opts.exp_dir)
+	print(pyrallis.dump(cfg))
+	with (cfg.log.exp_dir / 'config.yaml').open('w') as f:
+		pyrallis.dump(cfg, f)
 
-	opts_dict = vars(opts)
-	pprint.pprint(opts_dict)
-	with open(os.path.join(opts.exp_dir, 'opt.json'), 'w') as f:
-		json.dump(opts_dict, f, indent=4, sort_keys=True)
-
-	coach = Coach(opts)
+	coach = Coach(cfg)
 	coach.train()
 
 

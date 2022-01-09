@@ -1,55 +1,109 @@
-from argparse import ArgumentParser
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional, List
+import math
+
 from configs.paths_config import model_paths
 
 
-class TrainOptions:
+@dataclass
+class ComputeConfig:
+	""" Arguments related to workers and batches """
+	# Batch size for training
+	batch_size: int = 4
+	# Batch size for testing and inference
+	test_batch_size: int = 2
+	# Number of train dataloader workers
+	workers: int = 4
+	# Number of test/inference dataloader workers
+	test_workers: int = 2
 
-	def __init__(self):
-		self.parser = ArgumentParser()
-		self.initialize()
 
-	def initialize(self):
-		self.parser.add_argument('--exp_dir', type=str, help='Path to experiment output directory')
-		self.parser.add_argument('--dataset_type', default='ffhq_encode', type=str, help='Type of dataset/experiment to run')
-		self.parser.add_argument('--encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
-		self.parser.add_argument('--input_nc', default=3, type=int, help='Number of input image channels to the psp encoder')
-		self.parser.add_argument('--label_nc', default=0, type=int, help='Number of input label channels to the psp encoder')
-		self.parser.add_argument('--output_size', default=1024, type=int, help='Output size of generator')
+@dataclass
+class OptimConfig:
+	""" Arguments related to the optimization """
+	# Optimizer learning rate
+	learning_rate: float = 0.0001
+	# Which optimizer to use
+	optim_name: str = 'ranger'
+	# Maximum number of training steps
+	max_steps: int = 500000
+	# Whether to train the decoder model
+	train_decoder: bool = False
 
-		self.parser.add_argument('--batch_size', default=4, type=int, help='Batch size for training')
-		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')
-		self.parser.add_argument('--workers', default=4, type=int, help='Number of train dataloader workers')
-		self.parser.add_argument('--test_workers', default=2, type=int, help='Number of test/inference dataloader workers')
 
-		self.parser.add_argument('--learning_rate', default=0.0001, type=float, help='Optimizer learning rate')
-		self.parser.add_argument('--optim_name', default='ranger', type=str, help='Which optimizer to use')
-		self.parser.add_argument('--train_decoder', default=False, type=bool, help='Whether to train the decoder model')
-		self.parser.add_argument('--start_from_latent_avg', action='store_true', help='Whether to add average latent vector to generate codes from encoder.')
-		self.parser.add_argument('--learn_in_w', action='store_true', help='Whether to learn in w space instead of w+')
 
-		self.parser.add_argument('--lpips_lambda', default=0.8, type=float, help='LPIPS loss multiplier factor')
-		self.parser.add_argument('--id_lambda', default=0, type=float, help='ID loss multiplier factor')
-		self.parser.add_argument('--l2_lambda', default=1.0, type=float, help='L2 loss multiplier factor')
-		self.parser.add_argument('--w_norm_lambda', default=0, type=float, help='W-norm loss multiplier factor')
-		self.parser.add_argument('--lpips_lambda_crop', default=0, type=float, help='LPIPS loss multiplier factor for inner image region')
-		self.parser.add_argument('--l2_lambda_crop', default=0, type=float, help='L2 loss multiplier factor for inner image region')
-		self.parser.add_argument('--moco_lambda', default=0, type=float, help='Moco-based feature similarity loss multiplier factor')
+@dataclass
+class LossConfig:
+	""" Arguments related to the loss function """
+	# LPIPS loss multiplier factor
+	lpips_lambda: float = 0.8
+	# ID loss multiplier factor
+	id_lambda: float = 0
+	# L2 loss multiplier factor
+	l2_lambda: float = 1.0
+	# W-norm loss multiplier factor
+	w_norm_lambda: float = 0
+	# LPIPS loss multiplier factor for inner image region
+	lpips_lambda_crop: float = 0
+	# L2 loss multiplier factor for inner image region
+	l2_lambda_crop: float = 0
+	# Moco-based feature similarity loss multiplier factor
+	moco_lambda: float = 0
 
-		self.parser.add_argument('--stylegan_weights', default=model_paths['stylegan_ffhq'], type=str, help='Path to StyleGAN model weights')
-		self.parser.add_argument('--checkpoint_path', default=None, type=str, help='Path to pSp model checkpoint')
 
-		self.parser.add_argument('--max_steps', default=500000, type=int, help='Maximum number of training steps')
-		self.parser.add_argument('--image_interval', default=100, type=int, help='Interval for logging train images during training')
-		self.parser.add_argument('--board_interval', default=50, type=int, help='Interval for logging metrics to tensorboard')
-		self.parser.add_argument('--val_interval', default=1000, type=int, help='Validation interval')
-		self.parser.add_argument('--save_interval', default=None, type=int, help='Model checkpoint interval')
+@dataclass
+class LogConfig:
+	""" Arguments related to logging """
+	# Path to experiment output directory
+	exp_dir: Path
+	# Interval for logging train images during training
+	image_interval: int = 100
+	# Interval for logging metrics to tensorboard
+	board_interval: int = 50
+	# Validation interval
+	val_interval: int = 1000
+	# Model checkpoint interval
+	save_interval: Optional[int] = None
+	# Whether to use Weights & Biases to track experiment.
+	use_wandb: bool = False
 
-		# arguments for weights & biases support
-		self.parser.add_argument('--use_wandb', action="store_true", help='Whether to use Weights & Biases to track experiment.')
 
-		# arguments for super-resolution
-		self.parser.add_argument('--resize_factors', type=str, default=None, help='For super-res, comma-separated resize factors to use for inference.')
+@dataclass
+class TaskConfig:
+	""" Arguments related to the model and task """
+	# Type of dataset/experiment to run
+	dataset_type: str = 'ffhq_encode'
+	# Number of input image channels to the psp encoder
+	input_nc: int = 3
+	# Number of input label channels to the psp encoder
+	label_nc: int = 0
+	# Output size of generator
+	output_size: int = 1024
+	# For super-res, list of resize factors to use for inference.
+	resize_factors: Optional[List[int]] = None
+	# Which encoder to use
+	encoder_type: str = 'GradualStyleEncoder'
+	# Path to StyleGAN model weights
+	stylegan_weights: str = model_paths['stylegan_ffhq']
+	# Path to pSp model checkpoint
+	checkpoint_path: str = None
+	# Whether to add average latent vector to generate codes from encoder
+	start_from_latent_avg: bool = False
+	# Whether to learn in w space instead of w+
+	learn_in_w: bool = False
 
-	def parse(self):
-		opts = self.parser.parse_args()
-		return opts
+	@property
+	def n_styles(self) -> int:
+		return int(math.log(self.output_size, 2)) * 2 - 2
+
+
+
+@dataclass
+class TrainConfig:
+	""" All Training Arguments """
+	compute: ComputeConfig = field(default_factory=ComputeConfig)
+	optim: OptimConfig = field(default_factory=OptimConfig)
+	loss: LossConfig = field(default_factory=LossConfig)
+	log: LogConfig = field(default_factory=LogConfig)
+	task: TaskConfig = field(default_factory=TaskConfig)

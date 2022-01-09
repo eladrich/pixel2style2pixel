@@ -1,0 +1,18 @@
+task:
+  dataset_type: celebs_super_resolution
+  encoder_type: GradualStyleEncoder
+  start_from_latent_avg: True
+  resize_factors: [ 1,2,4,8,16,32 ]
+loss:
+  lpips_lambda: 0.8
+  l2_lambda: 1
+  id_lambda: 0.1
+  w_norm_lambda: 0.005
+compute:
+  workers: 8
+  test_workers: 8
+  batch_size: 8
+  test_batch_size: 8
+log:
+  val_interval: 2500
+  save_interval: 5000
