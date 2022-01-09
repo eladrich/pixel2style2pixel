@@ -168,6 +168,24 @@ Additionally, if you have tensorboard installed, you can visualize tensorboard l
 $ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/encode.yaml
 ```
 
+Alternatively, if you don't like configuration files, you can specify the arguments directly
+```console
+python scripts/train.py \
+ --log.exp_dir=/path/to/experiment \
+ --task.dataset_type=ffhq_encode \
+ --compute.workers=8 \
+ --compute.batch_size=8 \
+ --compute.test_batch_size=8 \
+ --compute.test_workers=8 \
+ --log.val_interval=2500 \
+ --log.save_interval=5000 \
+ --task.encoder_type=GradualStyleEncoder \
+ --task.start_from_latent_avg=True \
+ --loss.lpips_lambda=0.8 \
+ --loss.l2_lambda=1 \
+ --loss.id_lambda=0.1
+```
+
 #### **Frontalization**
 ```console
 $ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/frontalization.yaml
