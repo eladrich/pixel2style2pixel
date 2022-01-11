@@ -165,7 +165,7 @@ Additionally, if you have tensorboard installed, you can visualize tensorboard l
 
 #### **Training the pSp Encoder**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/encode.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --pyrallis.config=configs/train/encode.yaml
 ```
 
 Alternatively, if you don't like configuration files, you can specify the arguments directly
@@ -188,23 +188,23 @@ python scripts/train.py \
 
 #### **Frontalization**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/frontalization.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --config_path=configs/train/frontalization.yaml
 ```
 
 #### **Sketch to Face**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/sketch2face.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --config_path=configs/train/sketch2face.yaml
 ```
 
 #### **Segmentation Map to Face**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/seg2face.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --config_path=configs/train/seg2face.yaml
 ```
 Notice with conditional image synthesis no identity loss is utilized (i.e. `--loss.id_lambda=0`)
 
 #### **Super Resolution**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --CONFIG=configs/train/superres.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --config_path=configs/train/superres.yaml
 ```
 
 ### Additional Notes

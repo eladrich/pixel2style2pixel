@@ -33,6 +33,6 @@ dependencies:
     - tensorboard==2.2.1
     - torch==1.6.0
     - torchvision==0.4.2
-    - pyrallis==0.1.4.2
+    - pyrallis==0.2
 prefix: ~/anaconda3/envs/psp_env
 
