@@ -165,7 +165,7 @@ Additionally, if you have tensorboard installed, you can visualize tensorboard l
 
 #### **Training the pSp Encoder**
 ```console
-$ python scripts/train.py --log.exp_dir=/path/to/experiment --pyrallis.config=configs/train/encode.yaml
+$ python scripts/train.py --log.exp_dir=/path/to/experiment --config_path=configs/train/encode.yaml
 ```
 
 Alternatively, if you don't like configuration files, you can specify the arguments directly
