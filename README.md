@@ -26,6 +26,43 @@ The proposed pixel2style2pixel framework can be used to solve a wide variety of 
 Official Implementation of our pSp paper for both training and evaluation. The pSp method extends the StyleGAN model to 
 allow solving different image-to-image translation problems using its encoder.
 
+## Table of Contents
+  * [Description](#description)
+  * [Table of Contents](#table-of-contents)
+  * [Recent Updates](#recent-updates)
+  * [Applications](#applications)
+    + [StyleGAN Encoding](#stylegan-encoding)
+    + [Face Frontalization](#face-frontalization)
+    + [Conditional Image Synthesis](#conditional-image-synthesis)
+    + [Super Resolution](#super-resolution)
+  * [Getting Started](#getting-started)
+    + [Prerequisites](#prerequisites)
+    + [Installation](#installation)
+    + [Inference Notebook](#inference-notebook)
+    + [Pretrained Models](#pretrained-models)
+  * [Training](#training)
+    + [Preparing your Data](#preparing-your-data)
+    + [Training pSp](#training-psp)
+      - [Training the pSp Encoder](#training-the-psp-encoder)
+      - [Frontalization](#frontalization)
+      - [Sketch to Face](#sketch-to-face)
+      - [Segmentation Map to Face](#segmentation-map-to-face)
+      - [Super Resolution](#super-resolution-1)
+    + [Additional Notes](#additional-notes)
+    + [Weights & Biases Integration](#weights--biases-integration)
+  * [Testing](#testing)
+    + [Inference](#inference)
+    + [Multi-Modal Synthesis with Style-Mixing](#multi-modal-synthesis-with-style-mixing)
+    + [Computing Metrics](#computing-metrics)
+  * [Additional Applications](#additional-applications)
+    + [Toonify](#toonify)
+  * [Repository structure](#repository-structure)
+  * [TODOs](#todos)
+  * [Credits](#credits)
+  * [Inspired by pSp](#inspired-by-psp)
+  * [pSp in the Media](#psp-in-the-media)
+  * [Citation](#citation)
+  
 ## Recent Updates
 **`2020.10.04`**: Initial code release  
 **`2020.10.06`**: Add pSp toonify model (Thanks to the great work from [Doron Adler](https://linktr.ee/Norod78) and [Justin Pinkney](https://www.justinpinkney.com/))!  
@@ -152,7 +189,7 @@ The main training script can be found in `scripts/train.py`.
 Intermediate training results are saved to `opts.exp_dir`. This includes checkpoints, train outputs, and test outputs.  
 Additionally, if you have tensorboard installed, you can visualize tensorboard logs in `opts.exp_dir/logs`.
 
-#### **Training the pSp Encoder**
+#### Training the pSp Encoder
 ```
 python scripts/train.py \
 --dataset_type=ffhq_encode \
@@ -170,7 +207,7 @@ python scripts/train.py \
 --id_lambda=0.1
 ```
 
-#### **Frontalization**
+#### Frontalization
 ```
 python scripts/train.py \
 --dataset_type=ffhq_frontalize \
@@ -191,7 +228,7 @@ python scripts/train.py \
 --w_norm_lambda=0.005
 ```
 
-#### **Sketch to Face**
+#### Sketch to Face
 ```
 python scripts/train.py \
 --dataset_type=celebs_sketch_to_face \
@@ -212,7 +249,7 @@ python scripts/train.py \
 --input_nc=1
 ```
 
-#### **Segmentation Map to Face**
+#### Segmentation Map to Face
 ```
 python scripts/train.py \
 --dataset_type=celebs_seg_to_face \
@@ -234,7 +271,7 @@ python scripts/train.py \
 ```
 Notice with conditional image synthesis no identity loss is utilized (i.e. `--id_lambda=0`)
 
-#### **Super Resolution**
+#### Super Resolution
 ``` 
 python scripts/train.py \
 --dataset_type=celebs_super_resolution \
@@ -264,7 +301,7 @@ is the number of semantic categories.
 - Similarly, for generating images from sketches, please specify `--label_nc=1` and `--input_nc=1`.
 - Specifying `--label_nc=0` (the default value), will directly use the RGB colors as input.
 
-**Identity/Similarity Losses**  
+** Identity/Similarity Losses **   
 In pSp, we introduce a facial identity loss using a pre-trained ArcFace network for facial recognition. When operating on the human facial domain, we 
 highly recommend employing this loss objective by using the flag `--id_lambda`.  
 In a more recent paper, [encoder4editing](https://github.com/omertov/encoder4editing), the authors generalize this identity loss to other domains by 
