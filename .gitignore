@@ -1,0 +1,7 @@
+*.pkl
+*.pt
+*.pth
+*.pyc
+dataset.json
+pretrained_models
+experiments

@@ -11,6 +11,8 @@ from models.encoders import psp_encoders
 from models.stylegan2.model import Generator
 from configs.paths_config import model_paths
 
+import models.eg3d.dnnlib
+
 
 def get_keys(d, name):
 	if 'state_dict' in d:
@@ -28,7 +30,8 @@ class pSp(nn.Module):
 		self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
 		# Define architecture
 		self.encoder = self.set_encoder()
-		self.decoder = Generator(self.opts.output_size, 512, 8)
+		with dnnlib.util.open_url(self.opts.network_pkl) as f:
+        	self.decoder = legacy.load_network_pkl(f)['G_ema'].to(device)
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
 		self.load_weights()
@@ -66,12 +69,12 @@ class pSp(nn.Module):
 			else:
 				self.__load_latent_avg(ckpt, repeat=self.opts.n_styles)
 
-	def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
-	            inject_latent=None, return_latents=False, alpha=None):
+	def forward(self, x, c, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
+	            inject_latent=None, return_latents=False, return_pose = False, alpha=None):
 		if input_code:
 			codes = x
 		else:
-			codes = self.encoder(x)
+			codes, pose = self.encoder(x)
 			# normalize with respect to the center of an average face
 			if self.opts.start_from_latent_avg:
 				if self.opts.learn_in_w:

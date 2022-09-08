@@ -1,16 +1,20 @@
 from torch.utils.data import Dataset
 from PIL import Image
 from utils import data_utils
-
+import json
 
 class ImagesDataset(Dataset):
 
-	def __init__(self, source_root, target_root, opts, target_transform=None, source_transform=None):
+	def __init__(self, source_root, target_root, opts, target_transform=None, source_transform=None, metadata = None):
 		self.source_paths = sorted(data_utils.make_dataset(source_root))
 		self.target_paths = sorted(data_utils.make_dataset(target_root))
 		self.source_transform = source_transform
 		self.target_transform = target_transform
 		self.opts = opts
+
+		with open(metadata, "r") as f:
+			raw_metadata = json.load(f)
+		self.metadata = raw_metadata['labels']
 
 	def __len__(self):
 		return len(self.source_paths)
@@ -29,5 +33,6 @@ class ImagesDataset(Dataset):
 			from_im = self.source_transform(from_im)
 		else:
 			from_im = to_im
+		camera_param = self.camera_params[index]
 
-		return from_im, to_im
+		return from_im, to_im, -1

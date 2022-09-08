@@ -18,6 +18,7 @@ from datasets.images_dataset import ImagesDataset
 from criteria.lpips.lpips import LPIPS
 from models.psp import pSp
 from training.ranger import Ranger
+import copy
 
 from tqdm import tqdm
 
@@ -89,8 +90,9 @@ class Coach:
 		while self.global_step < self.opts.max_steps:
 			for batch_idx, batch in enumerate(tqdm(self.train_dataloader)):
 				self.optimizer.zero_grad()
-				x, y, c = batch
-				x, y, c = x.to(self.device).float(), y.to(self.device).float(), c.to(self.device).float()
+				x, c = batch
+				y = copy.deepcopy(x)
+				x, c = x.to(self.device).float(), c.to(self.device).float()
 				y_hat, latent = self.net.forward(x, c, return_latents=True)
 				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent)
 				loss.backward()
@@ -131,10 +133,11 @@ class Coach:
 		self.net.eval()
 		agg_loss_dict = []
 		for batch_idx, batch in enumerate(self.test_dataloader):
-			x, y = batch
+			x, _ = batch
+			y = copy.deepcopy(x)
 
 			with torch.no_grad():
-				x, y = x.to(self.device).float(), y.to(self.device).float()
+				x = x.to(self.device).float()
 				y_hat, latent = self.net.forward(x, return_latents=True)
 				loss, cur_loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent)
 			agg_loss_dict.append(cur_loss_dict)

@@ -6,6 +6,7 @@ from torch.nn import Linear, Conv2d, BatchNorm2d, PReLU, Sequential, Module
 
 from models.encoders.helpers import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE
 from models.stylegan2.model import EqualLinear
+from utils import angle_trans_to_cams
 
 
 class GradualStyleBlock(Module):
@@ -68,6 +69,9 @@ class GradualStyleEncoder(Module):
         self.latlayer1 = nn.Conv2d(256, 512, kernel_size=1, stride=1, padding=0)
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
 
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.pose_extractor = nn.Linear(512, 6)
+
     def _upsample_add(self, x, y):
         '''Upsample and add two feature maps.
         Args:
@@ -100,6 +104,11 @@ class GradualStyleEncoder(Module):
                 c2 = x
             elif i == 23:
                 c3 = x
+        x = self.avg_pool(x)
+        x = x.view(-1, 512)
+        pose = self.pose_extractor(x)
+        
+        cams = angle_trans_to_cams(pose)
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))
@@ -113,7 +122,7 @@ class GradualStyleEncoder(Module):
             latents.append(self.styles[j](p1))
 
         out = torch.stack(latents, dim=1)
-        return out
+        return out, pose
 
 
 class BackboneEncoderUsingLastLayerIntoW(Module):
