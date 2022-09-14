@@ -5,19 +5,21 @@ import os
 import json
 import sys
 import pprint
-
+import torch
 sys.path.append(".")
 sys.path.append("..")
 
 from options.train_options import TrainOptions
-from training.coach import Coach
+from training.eg3d_coach import Coach
 
 
 def main():
+
+	torch.autograd.set_detect_anomaly(True)
 	opts = TrainOptions().parse()
-	if os.path.exists(opts.exp_dir):
-		raise Exception('Oops... {} already exists'.format(opts.exp_dir))
-	os.makedirs(opts.exp_dir)
+	# if os.path.exists(opts.exp_dir):
+	# 	raise Exception('Oops... {} already exists'.format(opts.exp_dir))
+	os.makedirs(opts.exp_dir,exist_ok=True)
 
 	opts_dict = vars(opts)
 	pprint.pprint(opts_dict)

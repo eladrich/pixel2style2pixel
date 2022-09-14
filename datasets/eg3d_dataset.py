@@ -1,12 +1,13 @@
 from torch.utils.data import Dataset
 from PIL import Image
 from utils import data_utils
+import torch
 import json
 import os
 
 class EG3DDataset(Dataset):
 
-	def __init__(self, dataset_path, opts, metadata = None, transform=None):
+	def __init__(self, dataset_path, opts, metadata = None, transform=None, is_train = True):
 		self.dataset_path = dataset_path
 		self.opts = opts
 
@@ -15,21 +16,24 @@ class EG3DDataset(Dataset):
 
 		self.metadata = [{'path': i[0], 'cams': i[1]} for i in raw_metadata['labels']]
 
-        self.transform = transform
-
-
+		if is_train:
+			self.metadata = self.metadata[:120000]
+		else:
+			self.metadata = self.metadata[120000:]
+		self.transform = transform
+		
 
 	def __len__(self):
 		return len(self.metadata)
 
 	def __getitem__(self, index):
-		img_path = os.path.join(dataset_path,self.metdata[index]['path'])
+		img_path = os.path.join(self.dataset_path,self.metadata[index]['path'])
 		from_im = Image.open(img_path)
 		from_im = from_im.convert('RGB')
 
 		if self.transform:
 			from_im = self.transform(from_im)
 
-		camera_param = self.metatdata[index]['cams']
+		camera_param = torch.Tensor(self.metadata[index]['cams'])
 
 		return from_im, camera_param

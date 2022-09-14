@@ -11,8 +11,8 @@ from models.encoders import psp_encoders
 from models.stylegan2.model import Generator
 from configs.paths_config import model_paths
 
-import models.eg3d.dnnlib
-
+import dnnlib as dnnlib
+import models.eg3d.legacy as legacy
 
 def get_keys(d, name):
 	if 'state_dict' in d:
@@ -27,11 +27,12 @@ class pSp(nn.Module):
 		super(pSp, self).__init__()
 		self.set_opts(opts)
 		# compute number of style inputs based on the output resolution
-		self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
+		# self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
+		self.opts.n_styles = 14
 		# Define architecture
 		self.encoder = self.set_encoder()
 		with dnnlib.util.open_url(self.opts.network_pkl) as f:
-        	self.decoder = legacy.load_network_pkl(f)['G_ema'].to(device)
+			self.decoder = legacy.load_network_pkl(f)['G_ema']
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
 		self.load_weights()
@@ -69,12 +70,12 @@ class pSp(nn.Module):
 			else:
 				self.__load_latent_avg(ckpt, repeat=self.opts.n_styles)
 
-	def forward(self, x, c, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
+	def forward(self, x,y_cams = None, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, return_pose = False, alpha=None):
 		if input_code:
 			codes = x
 		else:
-			codes, pose = self.encoder(x)
+			codes, camera_params = self.encoder(x)
 			# normalize with respect to the center of an average face
 			if self.opts.start_from_latent_avg:
 				if self.opts.learn_in_w:
@@ -94,16 +95,15 @@ class pSp(nn.Module):
 					codes[:, i] = 0
 
 		input_is_latent = not input_code
-		images, result_latent = self.decoder([codes],
-		                                     input_is_latent=input_is_latent,
-		                                     randomize_noise=randomize_noise,
-		                                     return_latents=return_latents)
 
+
+		images = self.decoder.synthesis(codes, y_cams)['image']
+		
 		if resize:
 			images = self.face_pool(images)
 
 		if return_latents:
-			return images, result_latent
+			return images, camera_params, codes
 		else:
 			return images
 

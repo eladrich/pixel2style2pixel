@@ -15,6 +15,7 @@ from utils import common, train_utils
 from criteria import id_loss, w_norm, moco_loss
 from configs import data_configs
 from datasets.images_dataset import ImagesDataset
+from datasets.eg3d_dataset import EG3DDataset
 from criteria.lpips.lpips import LPIPS
 from models.psp import pSp
 from training.ranger import Ranger
@@ -90,11 +91,12 @@ class Coach:
 		while self.global_step < self.opts.max_steps:
 			for batch_idx, batch in enumerate(tqdm(self.train_dataloader)):
 				self.optimizer.zero_grad()
-				x, c = batch
+				x, y_cams = batch
 				y = copy.deepcopy(x)
-				x, c = x.to(self.device).float(), c.to(self.device).float()
-				y_hat, latent = self.net.forward(x, c, return_latents=True)
-				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent)
+
+				x, y, y_cams = x.to(self.device).float(),y.to(self.device).float(), y_cams.to(self.device).float()
+				y_hat, cams, latent = self.net.forward(x,y_cams =y_cams, return_latents=True)
+				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 				loss.backward()
 				self.optimizer.step()
 
@@ -133,13 +135,13 @@ class Coach:
 		self.net.eval()
 		agg_loss_dict = []
 		for batch_idx, batch in enumerate(self.test_dataloader):
-			x, _ = batch
+			x, y_cams = batch
 			y = copy.deepcopy(x)
 
 			with torch.no_grad():
-				x = x.to(self.device).float()
-				y_hat, latent = self.net.forward(x, return_latents=True)
-				loss, cur_loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent)
+				x, y, y_cams = x.to(self.device).float(),y.to(self.device).float(), y_cams.to(self.device).float()
+				y_hat, cams, latent = self.net.forward(x,y_cams = y_cams, return_latents=True)
+				loss, cur_loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 			agg_loss_dict.append(cur_loss_dict)
 
 			# Logging related
@@ -192,17 +194,15 @@ class Coach:
 		print(f'Loading dataset for {self.opts.dataset_type}')
 		dataset_args = data_configs.DATASETS[self.opts.dataset_type]
 		transforms_dict = dataset_args['transforms'](self.opts).get_transforms()
-		train_dataset = ImagesDataset(source_root=dataset_args['train_source_root'],
-									  target_root=dataset_args['train_target_root'],
-									  source_transform=transforms_dict['transform_source'],
-									  target_transform=transforms_dict['transform_gt_train'],
+		train_dataset = EG3DDataset(  dataset_path = self.opts.dataset_path,
+									  transform=transforms_dict['transform_gt_train'],
 									  opts=self.opts,
-									  camera_params_root = 'dataset.json')
-		test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
-									 target_root=dataset_args['test_target_root'],
-									 source_transform=transforms_dict['transform_source'],
-									 target_transform=transforms_dict['transform_test'],
-									 opts=self.opts)
+									  metadata = 'dataset.json')
+		test_dataset = EG3DDataset(  dataset_path = self.opts.dataset_path,
+									  transform=transforms_dict['transform_gt_train'],
+									  opts=self.opts,
+									  metadata = 'dataset.json',
+									  is_train = False)
 		if self.opts.use_wandb:
 			self.wb_logger.log_dataset_wandb(train_dataset, dataset_name="Train")
 			self.wb_logger.log_dataset_wandb(test_dataset, dataset_name="Test")
@@ -210,7 +210,7 @@ class Coach:
 		print(f"Number of test samples: {len(test_dataset)}")
 		return train_dataset, test_dataset
 
-	def calc_loss(self, x, y, y_hat, latent):
+	def calc_loss(self, x, y, y_hat, latent, cams, y_cams):
 		loss_dict = {}
 		loss = 0.0
 		id_logs = None
@@ -244,6 +244,10 @@ class Coach:
 			loss_dict['loss_moco'] = float(loss_moco)
 			loss_dict['id_improve'] = float(sim_improvement)
 			loss += loss_moco * self.opts.moco_lambda
+		if self.opts.cams_lambda > 0:
+			loss_cams = F.mse_loss(cams, y_cams)
+			loss_dict['loss_cams'] = float(loss_cams)
+			loss += loss_cams * self.opts.cams_lambda
 
 		loss_dict['loss'] = float(loss)
 		return loss, loss_dict, id_logs

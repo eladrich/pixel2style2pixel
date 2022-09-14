@@ -1,9 +1,9 @@
 python scripts/train.py \
 --dataset_type=ffhq_encode \
---exp_dir=experiments/12 \
+--exp_dir=experiments/33 \
 --workers=8 \
---batch_size=8 \
---test_batch_size=8 \
+--batch_size=4 \
+--test_batch_size=4 \
 --test_workers=8 \
 --val_interval=2500 \
 --save_interval=5000 \
@@ -11,4 +11,6 @@ python scripts/train.py \
 --start_from_latent_avg \
 --lpips_lambda=0.8 \
 --l2_lambda=1 \
---id_lambda=0.1
+--id_lambda=0.1 \
+--network_pkl=pretrained_models/ffhq512-128.pkl \
+--dataset_path=/workspace/ffhq_1024_mirrored

@@ -4,7 +4,7 @@ import torch
 
 
 def normalize_activation(x, eps=1e-10):
-    norm_factor = torch.sqrt(torch.sum(x ** 2, dim=1, keepdim=True))
+    norm_factor = torch.sqrt(torch.sum(x ** 2, dim=1, keepdim=True)+eps)
     return x / (norm_factor + eps)
 
 

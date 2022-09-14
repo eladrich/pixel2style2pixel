@@ -6,7 +6,7 @@ from torch.nn import Linear, Conv2d, BatchNorm2d, PReLU, Sequential, Module
 
 from models.encoders.helpers import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE
 from models.stylegan2.model import EqualLinear
-from utils import angle_trans_to_cams
+from .utils import angle_trans_to_cams
 
 
 class GradualStyleBlock(Module):
@@ -104,11 +104,12 @@ class GradualStyleEncoder(Module):
                 c2 = x
             elif i == 23:
                 c3 = x
+
         x = self.avg_pool(x)
         x = x.view(-1, 512)
         pose = self.pose_extractor(x)
         
-        cams = angle_trans_to_cams(pose)
+        cams = angle_trans_to_cams(pose[:,:3],pose[:,3:])
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))
@@ -122,7 +123,7 @@ class GradualStyleEncoder(Module):
             latents.append(self.styles[j](p1))
 
         out = torch.stack(latents, dim=1)
-        return out, pose
+        return out, cams
 
 
 class BackboneEncoderUsingLastLayerIntoW(Module):
