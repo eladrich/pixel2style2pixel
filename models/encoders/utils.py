@@ -89,7 +89,8 @@ def angle_trans_to_cams(angle, trans):
     # R = compute_rotation(angle)
     R = compute_rotation_matrix_from_ortho6d(angle)
     trans = trans.to('cuda:0')
-    # trans[:,2] += -10
+    mean_trans = torch.Tensor([0.01645587, 0.23713592, 2.5715761]).to('cuda:0')
+    trans = trans + mean_trans
 
     c = -torch.bmm(R, trans[:,:,None]).squeeze()
    
@@ -103,10 +104,10 @@ def angle_trans_to_cams(angle, trans):
 
     pose[:,:3,3] = c
 
-    focal = 1492.645 # = 1015*512/224*(300/466.285)#
-    pp = 256#112
-    w = 512#224
-    h = 512#224
+    focal = 2985.29 # = 1015*1024/224*(300/466.285)#
+    pp = 512#112
+    w = 1024#224
+    h = 1024#224
 
     count = 0
     K = make_batch_identity(batch, 3)
@@ -132,8 +133,10 @@ def angle_trans_to_cams(angle, trans):
 
 def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True, gpu_id=0):
 
-    x_raw = poses[:,0:3]#batch*3
-    y_raw = poses[:,3:6]#batch*3
+    x_mean = torch.Tensor([ 9.59558767e-01,  4.84514121e-04, -6.47509161e-03]).cuda(gpu_id)
+    y_mean = torch.Tensor([1.80135038e-04, -9.87191543e-01, -8.92407249e-02]).cuda(gpu_id)
+    x_raw = poses[:,0:3] + x_mean[None,:]#batch*3 
+    y_raw = poses[:,3:6] + y_mean[None,:]#batch*3
 
     x = normalize_vector(x_raw, use_gpu, gpu_id=gpu_id) #batch*3
     z = cross_product(x,y_raw) #batch*3

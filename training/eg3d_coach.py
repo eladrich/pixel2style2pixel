@@ -47,7 +47,7 @@ class Coach:
 			c_in = torch.zeros((int(1e5),25)).to(self.device)
 
 			self.net.latent_avg = self.net.decoder.mapping(latent_in,c_in).mean(0,keepdim=True)[0].detach()
-		print(self.net.latent_avg.shape)
+
 		# Initialize loss
 		if self.opts.id_lambda > 0 and self.opts.moco_lambda > 0:
 			raise ValueError('Both ID and MoCo loss have lambdas > 0! Please select only one to have non-zero lambda!')
@@ -100,6 +100,7 @@ class Coach:
 
 				x, y, y_cams = x.to(self.device).float(),y.to(self.device).float(), y_cams.to(self.device).float()
 				y_hat, cams, latent = self.net.forward(x, return_latents=True)
+
 				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 				loss.backward()
 				self.optimizer.step()
