@@ -1,7 +1,7 @@
 python scripts/train.py \
 --dataset_type=ffhq_encode \
---exp_dir=experiments/33 \
---workers=8 \
+--exp_dir=experiments/angle_trans_differ_naive \
+--workers=4 \
 --batch_size=4 \
 --test_batch_size=4 \
 --test_workers=8 \
@@ -12,5 +12,5 @@ python scripts/train.py \
 --lpips_lambda=0.8 \
 --l2_lambda=1 \
 --id_lambda=0.1 \
---network_pkl=pretrained_models/ffhq512-128.pkl \
---dataset_path=/workspace/ffhq_1024_mirrored
+--cams_lambda=1 \
+--dataset_path=/workspace/ffhq_512_mirrored

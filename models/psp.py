@@ -31,7 +31,7 @@ class pSp(nn.Module):
 		self.opts.n_styles = 14
 		# Define architecture
 		self.encoder = self.set_encoder()
-		with dnnlib.util.open_url(self.opts.network_pkl) as f:
+		with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
 			self.decoder = legacy.load_network_pkl(f)['G_ema']
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
@@ -63,12 +63,11 @@ class pSp(nn.Module):
 				encoder_ckpt = {k: v for k, v in encoder_ckpt.items() if "input_layer" not in k}
 			self.encoder.load_state_dict(encoder_ckpt, strict=False)
 			print('Loading decoder weights from pretrained!')
-			ckpt = torch.load(self.opts.stylegan_weights)
-			self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
-			if self.opts.learn_in_w:
-				self.__load_latent_avg(ckpt, repeat=1)
-			else:
-				self.__load_latent_avg(ckpt, repeat=self.opts.n_styles)
+
+			with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
+				self.decoder = legacy.load_network_pkl(f)['G_ema']
+				
+			self.latent_avg = None
 
 	def forward(self, x,y_cams = None, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, return_pose = False, alpha=None):
@@ -96,8 +95,10 @@ class pSp(nn.Module):
 
 		input_is_latent = not input_code
 
-
-		images = self.decoder.synthesis(codes, y_cams)['image']
+		if y_cams:
+			images = self.decoder.synthesis(codes, y_cams)['image']
+		else:
+			images = self.decoder.synthesis(codes, camera_params)['image']
 		
 		if resize:
 			images = self.face_pool(images)

@@ -42,6 +42,7 @@ class TriPlaneGenerator(torch.nn.Module):
         self.decoder = OSGDecoder(32, {'decoder_lr_mul': rendering_kwargs.get('decoder_lr_mul', 1), 'decoder_output_dim': 32})
         self.neural_rendering_resolution = 64
         self.rendering_kwargs = rendering_kwargs
+        print("!?@?!?")
     
         self._last_planes = None
     

@@ -32,27 +32,27 @@ def compute_rotation(angles):
         ones = torch.ones([batch_size, 1]).to(device)
         zeros = torch.zeros([batch_size, 1]).to(device)
 
-        x, y, z = angles[:, :1].clone(), angles[:, 1:2].clone(), angles[:, 2:].clone(),
+        x, y, z = angles[:, :1], angles[:, 1:2], angles[:, 2:]
         
         rot_x = torch.cat([
-            ones.clone(), zeros.clone(), zeros.clone(),
-            zeros.clone(), torch.cos(x), -torch.sin(x), 
-            zeros.clone(), torch.sin(x), torch.cos(x)
+            ones, zeros, zeros,
+            zeros, torch.cos(x), -torch.sin(x), 
+            zeros, torch.sin(x), torch.cos(x)
         ], dim=1).reshape([batch_size, 3, 3])
         
         rot_y = torch.cat([
-            torch.cos(y), zeros.clone(), torch.sin(y),
-            zeros.clone(), ones.clone(), zeros.clone(),
-            -torch.sin(y), zeros.clone(), torch.cos(y)
+            torch.cos(y), zeros, torch.sin(y),
+            zeros, ones, zeros,
+            -torch.sin(y), zeros, torch.cos(y)
         ], dim=1).reshape([batch_size, 3, 3])
 
         rot_z = torch.cat([
-            torch.cos(z), -torch.sin(z), zeros.clone(),
-            torch.sin(z), torch.cos(z), zeros.clone(),
-            zeros.clone(), zeros.clone(), ones.clone()
+            torch.cos(z), -torch.sin(z), zeros,
+            torch.sin(z), torch.cos(z), zeros,
+            zeros, zeros, ones
         ], dim=1).reshape([batch_size, 3, 3])
 
-        rot = rot_z @ rot_y @ rot_x
+        rot = torch.bmm(torch.bmm(rot_z, rot_y), rot_x)
         return rot.permute(0, 2, 1)
 
 def fix_intrinsics(intrinsics):
@@ -71,7 +71,7 @@ def fix_intrinsics(intrinsics):
 def fix_pose_orig(pose):
     location = pose[:, :3, 3].clone()
     radius = torch.sqrt(torch.sum(location**2,dim= 1))
-    pose[:, :3, 3] /= radius[:,None] * 2.7
+    pose[:, :3, 3] =  location / radius[:,None] * 2.7
 
     return pose
 
@@ -83,13 +83,13 @@ def make_batch_identity(batch, dim):
 
     return im
 
-
 def angle_trans_to_cams(angle, trans):
 
     batch = angle.shape[0]
-    R = compute_rotation(angle)
+    # R = compute_rotation(angle)
+    R = compute_rotation_matrix_from_ortho6d(angle)
     trans = trans.to('cuda:0')
-    trans[:,2] += -10
+    # trans[:,2] += -10
 
     c = -torch.bmm(R, trans[:,:,None]).squeeze()
    
@@ -97,12 +97,11 @@ def angle_trans_to_cams(angle, trans):
 
     pose[:, :3, :3] = R
 
-    c *= 0.27 # normalize camera radius
-    c[:,1] += 0.006 # additional offset used in submission
-    c[:,2] += 0.161 # additional offset used in submission
-    pose[:,0,3] = c[:,0]
-    pose[:,1,3] = c[:,1]
-    pose[:,2,3] = c[:,2]
+    # c *= 0.27 # normalize camera radius
+    # c[:,1] += 0.006 # additional offset used in submission
+    # c[:,2] += 0.161 # additional offset used in submission
+
+    pose[:,:3,3] = c
 
     focal = 1492.645 # = 1015*512/224*(300/466.285)#
     pp = 256#112
@@ -116,17 +115,57 @@ def angle_trans_to_cams(angle, trans):
     K[:,0,2] = w/2.0
     K[:,1,2] = h/2.0
 
-    Rot = make_batch_identity(batch,3)
-    Rot[:, 0, 0] = 1
-    Rot[:, 1, 1] = -1
-    Rot[:, 2, 2] = -1
+    # Rot = make_batch_identity(batch,3)
+    # Rot[:, 0, 0] = 1
+    # Rot[:, 1, 1] = -1
+    # Rot[:, 2, 2] = -1
         
-    pose[:, :3, :3] = torch.bmm(pose[:, :3, :3].clone(), Rot).squeeze()
+    # pose[:, :3, :3] = torch.bmm(pose[:, :3, :3].clone(), Rot)
 
-    pose = fix_pose_orig(pose)
+    # fixed_pose = fix_pose_orig(pose)
 
     intrinsics = fix_intrinsics(K)
 
     cams = torch.cat([pose.reshape(batch,-1), intrinsics.reshape(batch,-1)],dim=1)
 
     return cams
+
+def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True, gpu_id=0):
+
+    x_raw = poses[:,0:3]#batch*3
+    y_raw = poses[:,3:6]#batch*3
+
+    x = normalize_vector(x_raw, use_gpu, gpu_id=gpu_id) #batch*3
+    z = cross_product(x,y_raw) #batch*3
+    z = normalize_vector(z, use_gpu,gpu_id=gpu_id)#batch*3
+    y = cross_product(z,x)#batch*3
+        
+    x = x.view(-1,3,1)
+    y = y.view(-1,3,1)
+    z = z.view(-1,3,1)
+    matrix = torch.cat((x,y,z), 2) #batch*3*3
+    return matrix
+
+def normalize_vector(v, use_gpu=True, gpu_id = 0):
+    batch=v.shape[0]
+    v_mag = torch.sqrt(v.pow(2).sum(1))# batch
+    if use_gpu:
+        v_mag = torch.max(v_mag, torch.autograd.Variable(torch.FloatTensor([1e-8]).cuda(gpu_id)))
+    else:
+        v_mag = torch.max(v_mag, torch.autograd.Variable(torch.FloatTensor([1e-8])))  
+    v_mag = v_mag.view(batch,1).expand(batch,v.shape[1])
+    v = v/v_mag
+    return v
+    
+# u, v batch*n
+def cross_product(u, v):
+    batch = u.shape[0]
+    #print (u.shape)
+    #print (v.shape)
+    i = u[:,1]*v[:,2] - u[:,2]*v[:,1]
+    j = u[:,2]*v[:,0] - u[:,0]*v[:,2]
+    k = u[:,0]*v[:,1] - u[:,1]*v[:,0]
+        
+    out = torch.cat((i.view(batch,1), j.view(batch,1), k.view(batch,1)),1)#batch*3
+        
+    return out

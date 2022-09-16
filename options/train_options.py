@@ -15,14 +15,14 @@ class TrainOptions:
 		self.parser.add_argument('--encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
 		self.parser.add_argument('--input_nc', default=3, type=int, help='Number of input image channels to the psp encoder')
 		self.parser.add_argument('--label_nc', default=0, type=int, help='Number of input label channels to the psp encoder')
-		self.parser.add_argument('--output_size', default=1024, type=int, help='Output size of generator')
+		self.parser.add_argument('--output_size', default=512, type=int, help='Output size of generator')
 
 		self.parser.add_argument('--batch_size', default=4, type=int, help='Batch size for training')
 		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')
 		self.parser.add_argument('--workers', default=4, type=int, help='Number of train dataloader workers')
 		self.parser.add_argument('--test_workers', default=2, type=int, help='Number of test/inference dataloader workers')
 
-		self.parser.add_argument('--learning_rate', default=0.00005, type=float, help='Optimizer learning rate')
+		self.parser.add_argument('--learning_rate', default=0.0001, type=float, help='Optimizer learning rate')
 		self.parser.add_argument('--optim_name', default='ranger', type=str, help='Which optimizer to use')
 		self.parser.add_argument('--train_decoder', default=False, type=bool, help='Whether to train the decoder model')
 		self.parser.add_argument('--start_from_latent_avg', action='store_true', help='Whether to add average latent vector to generate codes from encoder.')
@@ -37,9 +37,7 @@ class TrainOptions:
 		self.parser.add_argument('--moco_lambda', default=0, type=float, help='Moco-based feature similarity loss multiplier factor')
 		self.parser.add_argument('--cams_lambda', default=0, type=float, help='Camera parameter Loss factor')
 
-		self.parser.add_argument('--stylegan_weights', default=model_paths['stylegan_ffhq'], type=str, help='Path to StyleGAN model weights')
 		self.parser.add_argument('--checkpoint_path', default=None, type=str, help='Path to pSp model checkpoint')
-		self.parser.add_argument('--network_pkl', default=None, type=str, help='Path to eg3d checkpoint')
 
 		self.parser.add_argument('--max_steps', default=500000, type=int, help='Maximum number of training steps')
 		self.parser.add_argument('--image_interval', default=100, type=int, help='Interval for logging train images during training')

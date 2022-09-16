@@ -70,7 +70,8 @@ class GradualStyleEncoder(Module):
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.pose_extractor = nn.Linear(512, 6)
+        self.angle_extractor = nn.Linear(512, 6)
+        self.trans_extractor = nn.Linear(512, 3)
 
     def _upsample_add(self, x, y):
         '''Upsample and add two feature maps.
@@ -107,9 +108,10 @@ class GradualStyleEncoder(Module):
 
         x = self.avg_pool(x)
         x = x.view(-1, 512)
-        pose = self.pose_extractor(x)
+        angle = self.angle_extractor(x)
+        trans = self.trans_extractor(x)
         
-        cams = angle_trans_to_cams(pose[:,:3],pose[:,3:])
+        cams = angle_trans_to_cams(angle,trans)
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))
