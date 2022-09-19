@@ -31,7 +31,7 @@ class Coach:
 
 		self.global_step = 0
 
-		self.device = 'cuda:0'  # TODO: Allow multiple GPU? currently using CUDA_VISIBLE_DEVICES
+		self.device = 'cuda'  # TODO: Allow multiple GPU? currently using CUDA_VISIBLE_DEVICES
 		self.opts.device = self.device
 
 		if self.opts.use_wandb:
@@ -39,14 +39,16 @@ class Coach:
 			self.wb_logger = WBLogger(self.opts)
 
 		# Initialize network
-		self.net = pSp(self.opts).to(self.device)
+		self.net = pSp(self.opts)
+		self.net = nn.DataParallel(self.net,device_ids = [0,1,2])
+		self.net.cuda()
 
 		# Estimate latent_avg via dense sampling if latent_avg is not available
-		if self.net.latent_avg is None:
-			latent_in = torch.randn(int(1e5),self.net.decoder.z_dim).to(self.device)
+		if self.net.module.latent_avg is None:
+			latent_in = torch.randn(int(1e5),self.net.module.decoder.z_dim).to(self.device)
 			c_in = torch.zeros((int(1e5),25)).to(self.device)
 
-			self.net.latent_avg = self.net.decoder.mapping(latent_in,c_in).mean(0,keepdim=True)[0].detach()
+			self.net.module.latent_avg = self.net.module.decoder.mapping(latent_in,c_in).mean(0,keepdim=True)[0].detach()
 
 		# Initialize loss
 		if self.opts.id_lambda > 0 and self.opts.moco_lambda > 0:
@@ -91,7 +93,7 @@ class Coach:
 			self.opts.save_interval = self.opts.max_steps
 
 	def train(self):
-		self.net.train()
+		self.net.module.train()
 		while self.global_step < self.opts.max_steps:
 			for batch_idx, batch in enumerate(tqdm(self.train_dataloader)):
 				self.optimizer.zero_grad()
@@ -99,7 +101,7 @@ class Coach:
 				y = copy.deepcopy(x)
 
 				x, y, y_cams = x.to(self.device).float(),y.to(self.device).float(), y_cams.to(self.device).float()
-				y_hat, cams, latent = self.net.forward(x, return_latents=True)
+				y_hat, cams, latent = self.net.module.forward(x, return_latents=True)
 
 				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 				loss.backward()
@@ -137,7 +139,7 @@ class Coach:
 				self.global_step += 1
 
 	def validate(self):
-		self.net.eval()
+		self.net.module.eval()
 		agg_loss_dict = []
 		for batch_idx, batch in enumerate(self.test_dataloader):
 			x, y_cams = batch
@@ -145,7 +147,7 @@ class Coach:
 
 			with torch.no_grad():
 				x, y, y_cams = x.to(self.device).float(),y.to(self.device).float(), y_cams.to(self.device).float()
-				y_hat, cams, latent = self.net.forward(x, return_latents=True)
+				y_hat, cams, latent = self.net.module.forward(x, return_latents=True)
 				loss, cur_loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 			agg_loss_dict.append(cur_loss_dict)
 
@@ -160,14 +162,14 @@ class Coach:
 
 			# For first step just do sanity test on small amount of data
 			if self.global_step == 0 and batch_idx >= 4:
-				self.net.train()
+				self.net.module.train()
 				return None  # Do not log, inaccurate in first batch
 
 		loss_dict = train_utils.aggregate_loss_dict(agg_loss_dict)
 		self.log_metrics(loss_dict, prefix='test')
 		self.print_metrics(loss_dict, prefix='test')
 
-		self.net.train()
+		self.net.module.train()
 		return loss_dict
 
 	def checkpoint_me(self, loss_dict, is_best):
@@ -184,9 +186,9 @@ class Coach:
 				f.write(f'Step - {self.global_step}, \n{loss_dict}\n')
 
 	def configure_optimizers(self):
-		params = list(self.net.encoder.parameters())
+		params = list(self.net.module.encoder.parameters())
 		if self.opts.train_decoder:
-			params += list(self.net.decoder.parameters())
+			params += list(self.net.module.decoder.parameters())
 		if self.opts.optim_name == 'adam':
 			optimizer = torch.optim.Adam(params, lr=self.opts.learning_rate)
 		else:
@@ -241,7 +243,7 @@ class Coach:
 			loss_dict['loss_l2_crop'] = float(loss_l2_crop)
 			loss += loss_l2_crop * self.opts.l2_lambda_crop
 		if self.opts.w_norm_lambda > 0:
-			loss_w_norm = self.w_norm_loss(latent, self.net.latent_avg)
+			loss_w_norm = self.w_norm_loss(latent, self.net.module.latent_avg)
 			loss_dict['loss_w_norm'] = float(loss_w_norm)
 			loss += loss_w_norm * self.opts.w_norm_lambda
 		if self.opts.moco_lambda > 0:
@@ -268,7 +270,7 @@ class Coach:
 		for key, value in metrics_dict.items():
 			print(f'\t{key} = ', value)
 
-	def parse_and_log_images(self, id_logs, x, y, y_hat, title, subscript=None, display_count=2):
+	def parse_and_log_images(self, id_logs, x, y, y_hat, title, subscript=None, display_count=1):
 		im_data = []
 		for i in range(display_count):
 			cur_im_data = {
@@ -297,10 +299,10 @@ class Coach:
 
 	def __get_save_dict(self):
 		save_dict = {
-			'state_dict': self.net.state_dict(),
+			'state_dict': self.net.module.state_dict(),
 			'opts': vars(self.opts)
 		}
 		# save the latent avg in state_dict for inference if truncation of w was used during training
 		if self.opts.start_from_latent_avg:
-			save_dict['latent_avg'] = self.net.latent_avg
+			save_dict['latent_avg'] = self.net.module.latent_avg
 		return save_dict

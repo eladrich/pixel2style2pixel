@@ -2,9 +2,9 @@ python scripts/train.py \
 --dataset_type=ffhq_encode \
 --exp_dir=experiments/angle_trans_differ_ortho_mean \
 --workers=4 \
---batch_size=4 \
---test_batch_size=4 \
---test_workers=8 \
+--batch_size=1 \
+--test_batch_size=1 \
+--test_workers=4 \
 --val_interval=2500 \
 --save_interval=5000 \
 --encoder_type=GradualStyleEncoder \
