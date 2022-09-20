@@ -11,6 +11,9 @@ from models.encoders import psp_encoders
 from models.stylegan2.model import Generator
 from configs.paths_config import model_paths
 
+from torch_utils import misc
+
+from training.triplane import TriPlaneGenerator
 import dnnlib as dnnlib
 import models.eg3d.legacy as legacy
 
@@ -65,7 +68,12 @@ class pSp(nn.Module):
 			print('Loading decoder weights from pretrained!')
 
 			with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
-				self.decoder = legacy.load_network_pkl(f)['G_ema']
+				temp_decoder = legacy.load_network_pkl(f)['G_ema']
+
+			self.decoder = TriPlaneGenerator(*temp_decoder.init_args, **temp_decoder.init_kwargs).eval().requires_grad_(False)
+			misc.copy_params_and_buffers(temp_decoder, self.decoder, require_all=True)
+			self.decoder.neural_rendering_resolution = temp_decoder.neural_rendering_resolution
+			self.decoder.rendering_kwargs = temp_decoder.rendering_kwargs
 				
 			self.latent_avg = None
 

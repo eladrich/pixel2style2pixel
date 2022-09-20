@@ -17,10 +17,10 @@ class TrainOptions:
 		self.parser.add_argument('--label_nc', default=0, type=int, help='Number of input label channels to the psp encoder')
 		self.parser.add_argument('--output_size', default=512, type=int, help='Output size of generator')
 
-		self.parser.add_argument('--batch_size', default=4, type=int, help='Batch size for training')
+		self.parser.add_argument('--batch_size', default=2, type=int, help='Batch size for training')
 		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')
-		self.parser.add_argument('--workers', default=4, type=int, help='Number of train dataloader workers')
-		self.parser.add_argument('--test_workers', default=2, type=int, help='Number of test/inference dataloader workers')
+		self.parser.add_argument('--workers', default=8, type=int, help='Number of train dataloader workers')
+		self.parser.add_argument('--test_workers', default=4, type=int, help='Number of test/inference dataloader workers')
 
 		self.parser.add_argument('--learning_rate', default=0.0001, type=float, help='Optimizer learning rate')
 		self.parser.add_argument('--optim_name', default='ranger', type=str, help='Which optimizer to use')
@@ -51,6 +51,11 @@ class TrainOptions:
 		# arguments for super-resolution
 		self.parser.add_argument('--resize_factors', type=str, default=None, help='For super-res, comma-separated resize factors to use for inference.')
 
+		# arguments for data distributed learning
+		self.parser.add_argument('--distributed', type=bool, default=False, help ='Whether distributed learning is used')
+		self.parser.add_argument('--num_gpus', type=int, default=-1, help ='the number of process(GPU)')
+		self.parser.add_argument('--dist_backend', type=str, default='nccl', help ='dist_backend')
+		self.parser.add_argument('--rank', type=int, default= 0, help ='rank')
 	def parse(self):
 		opts = self.parser.parse_args()
 		return opts

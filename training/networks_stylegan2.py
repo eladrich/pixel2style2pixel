@@ -456,8 +456,8 @@ class SynthesisBlock(torch.nn.Module):
             y = y.to(dtype=torch.float32, memory_format=torch.contiguous_format)
             img = img.add_(y) if img is not None else y
 
-        assert x.dtype == dtype
-        assert img is None or img.dtype == torch.float32
+        # assert x.dtype == dtype
+        # assert img is None or img.dtype == torch.float32
         return x, img
 
     def extra_repr(self):
@@ -634,7 +634,7 @@ class DiscriminatorBlock(torch.nn.Module):
             x = self.conv0(x)
             x = self.conv1(x)
 
-        assert x.dtype == dtype
+        # assert x.dtype == dtype
         return x, img
 
     def extra_repr(self):
@@ -724,7 +724,7 @@ class DiscriminatorEpilogue(torch.nn.Module):
             misc.assert_shape(cmap, [None, self.cmap_dim])
             x = (x * cmap).sum(dim=1, keepdim=True) * (1 / np.sqrt(self.cmap_dim))
 
-        assert x.dtype == dtype
+        # assert x.dtype == dtype
         return x
 
     def extra_repr(self):

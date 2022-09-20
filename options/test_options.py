@@ -28,6 +28,8 @@ class TestOptions:
 		self.parser.add_argument('--resize_factors', type=str, default=None,
 		                         help='Downsampling factor for super-res (should be a single value for inference).')
 
+		
+
 	def parse(self):
 		opts = self.parser.parse_args()
 		return opts

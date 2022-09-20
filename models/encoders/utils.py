@@ -17,7 +17,7 @@ import argparse
 import scipy.io
 import sys
 
-def compute_rotation(angles):
+def compute_rotation(angles, rank):
         """
         Return:
             rot              -- torch.tensor, size (B, 3, 3) pts @ trans_mat
@@ -26,7 +26,7 @@ def compute_rotation(angles):
             angles           -- torch.tensor, size (B, 3), radian
         """
 
-        device = 'cuda:0'
+        device = torch.device(rank)
 
         batch_size = angles.shape[0]
         ones = torch.ones([batch_size, 1]).to(device)
@@ -75,26 +75,30 @@ def fix_pose_orig(pose):
 
     return pose
 
-def make_batch_identity(batch, dim):
+def make_batch_identity(batch, dim, rank):
 
-    im = torch.eye(dim, device='cuda:0', requires_grad=True)
+    device = torch.device(rank)
+
+    im = torch.eye(dim, device=device, requires_grad=True)
     im = im.reshape((1, dim, dim))
     im = im.repeat(batch, 1, 1)
 
     return im
 
-def angle_trans_to_cams(angle, trans):
+def angle_trans_to_cams(angle, trans, rank):
+
+    device = torch.device(rank)
 
     batch = angle.shape[0]
     # R = compute_rotation(angle)
-    R = compute_rotation_matrix_from_ortho6d(angle)
-    trans = trans.to('cuda:0')
-    mean_trans = torch.Tensor([0.01645587, 0.23713592, 2.5715761]).to('cuda:0')
+    R = compute_rotation_matrix_from_ortho6d(angle,rank = rank)
+    trans = trans.to(device)
+    mean_trans = torch.Tensor([0.01645587, 0.23713592, 2.5715761]).to(device)
     trans = trans + mean_trans
 
     c = -torch.bmm(R, trans[:,:,None]).squeeze()
    
-    pose = make_batch_identity(batch, 4)
+    pose = make_batch_identity(batch, 4, rank)
 
     pose[:, :3, :3] = R
 
@@ -110,7 +114,7 @@ def angle_trans_to_cams(angle, trans):
     h = 1024#224
 
     count = 0
-    K = make_batch_identity(batch, 3)
+    K = make_batch_identity(batch, 3, rank)
     K[:,0,0] = focal
     K[:,1,1] = focal
     K[:,0,2] = w/2.0
@@ -131,16 +135,18 @@ def angle_trans_to_cams(angle, trans):
 
     return cams
 
-def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True, gpu_id=0):
+def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True, rank = 0):
 
-    x_mean = torch.Tensor([ 9.59558767e-01,  4.84514121e-04, -6.47509161e-03]).cuda(gpu_id)
-    y_mean = torch.Tensor([1.80135038e-04, -9.87191543e-01, -8.92407249e-02]).cuda(gpu_id)
+    device = torch.device(rank)
+
+    x_mean = torch.Tensor([ 9.59558767e-01,  4.84514121e-04, -6.47509161e-03]).to(device)
+    y_mean = torch.Tensor([1.80135038e-04, -9.87191543e-01, -8.92407249e-02]).to(device)
     x_raw = poses[:,0:3] + x_mean[None,:]#batch*3 
     y_raw = poses[:,3:6] + y_mean[None,:]#batch*3
 
-    x = normalize_vector(x_raw, use_gpu, gpu_id=gpu_id) #batch*3
+    x = normalize_vector(x_raw, use_gpu, rank=rank) #batch*3
     z = cross_product(x,y_raw) #batch*3
-    z = normalize_vector(z, use_gpu,gpu_id=gpu_id)#batch*3
+    z = normalize_vector(z, use_gpu,rank=rank)#batch*3
     y = cross_product(z,x)#batch*3
         
     x = x.view(-1,3,1)
@@ -149,13 +155,15 @@ def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True, gpu_id=0):
     matrix = torch.cat((x,y,z), 2) #batch*3*3
     return matrix
 
-def normalize_vector(v, use_gpu=True, gpu_id = 0):
+def normalize_vector(v, use_gpu=True, rank = 0):
+
+    device = torch.device(rank)
+    
     batch=v.shape[0]
     v_mag = torch.sqrt(v.pow(2).sum(1))# batch
-    if use_gpu:
-        v_mag = torch.max(v_mag, torch.autograd.Variable(torch.FloatTensor([1e-8]).cuda(gpu_id)))
-    else:
-        v_mag = torch.max(v_mag, torch.autograd.Variable(torch.FloatTensor([1e-8])))  
+
+    v_mag = torch.max(v_mag, torch.autograd.Variable(torch.FloatTensor([1e-8]).to(device)))
+
     v_mag = v_mag.view(batch,1).expand(batch,v.shape[1])
     v = v/v_mag
     return v

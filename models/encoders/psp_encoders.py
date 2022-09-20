@@ -73,6 +73,8 @@ class GradualStyleEncoder(Module):
         self.angle_extractor = nn.Linear(512, 6)
         self.trans_extractor = nn.Linear(512, 3)
 
+        self.opts = opts
+
     def _upsample_add(self, x, y):
         '''Upsample and add two feature maps.
         Args:
@@ -111,7 +113,7 @@ class GradualStyleEncoder(Module):
         angle = self.angle_extractor(x)
         trans = self.trans_extractor(x)
         
-        cams = angle_trans_to_cams(angle,trans)
+        cams = angle_trans_to_cams(angle,trans,self.opts.rank)
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))
