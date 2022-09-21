@@ -188,7 +188,7 @@ class ModulatedConv2d(nn.Module):
     ):
         super().__init__()
 
-        self.eps = 1e-8
+        self.eps = 6.1e-5
         self.kernel_size = kernel_size
         self.in_channel = in_channel
         self.out_channel = out_channel

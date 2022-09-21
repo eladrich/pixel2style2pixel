@@ -30,7 +30,7 @@ class Ranger(Optimizer):
 
 	def __init__(self, params, lr=1e-3,  # lr
 				 alpha=0.5, k=6, N_sma_threshhold=5,  # Ranger options
-				 betas=(.95, 0.999), eps=1e-5, weight_decay=0,  # Adam options
+				 betas=(.95, 0.999), eps=6.1e-5, weight_decay=0,  # Adam options
 				 use_gc=True, gc_conv_only=False
 				 # Gradient centralization on or off, applied to conv layers only or conv + fc layers
 				 ):

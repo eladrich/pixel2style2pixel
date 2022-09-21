@@ -7,6 +7,7 @@ import sys
 import pprint
 import torch
 import torch.multiprocessing as mp
+import torch.distributed as dist
 sys.path.append(".")
 sys.path.append("..")
 
@@ -26,6 +27,12 @@ def cleanup():
 
 def main():
 
+
+	dist.init_process_group(backend = "nccl", init_method='env://')
+	rank = dist.get_rank()
+	size = dist.get_world_size()
+	local_rank = int(os.environ['LOCAL_RANK'])
+
 	# torch.autograd.set_detect_anomaly(True)
 	opts = TrainOptions().parse()
 	# if os.path.exists(opts.exp_dir):
@@ -37,10 +44,18 @@ def main():
 	with open(os.path.join(opts.exp_dir, 'opt.json'), 'w') as f:
 		json.dump(opts_dict, f, indent=4, sort_keys=True)
 
-	if opts.distributed:
-		mp.spawn(main_worker, nprocs = opts.num_gpus, args = (opts.num_gpus, opts), join = True)
-	else:
-		main_worker(0, opts.num_gpus, opts)
+	opts.num_gpus = size
+	opts.rank = local_rank
+
+	coach = Coach(opts)
+	coach.train()
+
+	# if opts.distributed:
+	# 	mp.spawn(main_worker, nprocs = opts.num_gpus, args = (opts.num_gpus, opts), join = True)
+	# else:
+	# 	main_worker(0, opts.num_gpus, opts)
+	
+	cleanup()
 
 	
 	

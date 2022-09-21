@@ -22,6 +22,7 @@ from training.ranger import Ranger
 import copy
 
 from tqdm import tqdm
+from datetime import datetime
 
 
 
@@ -32,6 +33,7 @@ class Coach:
 		self.global_step = 0
 
 		self.device = torch.device(opts.rank)# TODO: Allow multiple GPU? currently using CUDA_VISIBLE_DEVICES
+		print(self.device)
 
 		if self.opts.use_wandb:
 			from utils.wandb_utils import WBLogger
@@ -43,10 +45,9 @@ class Coach:
 		if opts.distributed:
 
 			opts.batch_size = int(opts.batch_size / opts.num_gpus)
-			opts.workers = int((opts.workers + opts.num_gpus - 1) / opts.num_gpus)
 
-			self.net = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[opts.rank])
-			self.net = self.net.module
+			self.net_ddp = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[opts.rank])
+			self.net = self.net_ddp.module
 		# Estimate latent_avg via dense sampling if latent_avg is not available
 		if self.net.latent_avg is None:
 			latent_in = torch.randn(int(1e5),self.net.decoder.z_dim).to(self.device)
@@ -77,8 +78,10 @@ class Coach:
 		self.train_dataset, self.test_dataset = self.configure_datasets()
 
 		if opts.distributed:
-			self.train_sampler = torch.utils.data.distributed.DistributedSampler(self.train_dataset)
-			self.test_sampler = torch.utils.data.distributed.DistributedSampler(self.test_dataset)
+			self.train_sampler = torch.utils.data.distributed.DistributedSampler(self.train_dataset,num_replicas=self.opts.num_gpus,
+        rank=self.opts.rank)
+			self.test_sampler = torch.utils.data.distributed.DistributedSampler(self.test_dataset,num_replicas=self.opts.num_gpus,
+        rank=self.opts.rank)
 		else:
 			self.train_sampler, self.test_sampler = None, None
 
@@ -87,12 +90,14 @@ class Coach:
 										   shuffle= self.train_sampler is None,
 										   num_workers=int(self.opts.workers),
 										   sampler = self.train_sampler,
+										   pin_memory=True,
 										   drop_last=True)
 		self.test_dataloader = DataLoader(self.test_dataset,
 										  batch_size=self.opts.test_batch_size,
 										  shuffle= self.test_sampler is None,
 										  num_workers=int(self.opts.test_workers),
 										  sampler = self.test_sampler,
+										  pin_memory=True,
 										  drop_last=True)
 
 		# Initialize logger
@@ -111,24 +116,26 @@ class Coach:
 
 	def train(self):
 		print(f"At GPU {self.opts.rank}, Train starts.")
-		self.net.train()
+		self.net_ddp.train()
 		epoch = 0
 		while self.global_step < self.opts.max_steps:
-			self.train_sampler.set_epoch(epoch)
+			self.train_dataloader.sampler.set_epoch(epoch)
 			
-			for batch_idx, batch in enumerate(self.train_dataloader):
+			for batch_idx, batch in enumerate(tqdm(self.train_dataloader)):
 				x, y_cams = batch
 				y = copy.deepcopy(x)
 
 				x, y, y_cams = x.to(self.device),y.to(self.device).float(), y_cams.to(self.device)
-
 				with torch.cuda.amp.autocast():
 					y_hat, cams, latent = self.net.forward(x, return_latents=True)
 					loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 				
 				self.optimizer.zero_grad()
+				print(loss)
 				self.scaler.scale(loss).backward()
 				self.scaler.unscale_(self.optimizer)
+
+				torch.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
 				self.scaler.step(self.optimizer)
 				self.scaler.update()
 
@@ -165,9 +172,9 @@ class Coach:
 			epoch += 1
 
 	def validate(self):
-		self.net.eval()
+		self.net_ddp.eval()
 		agg_loss_dict = []
-		for batch_idx, batch in self.test_dataloader:
+		for batch_idx, batch in enumerate(self.test_dataloader):
 			x, y_cams = batch
 			y = copy.deepcopy(x)
 
@@ -189,14 +196,14 @@ class Coach:
 
 			# For first step just do sanity test on small amount of data
 			if self.global_step == 0 and batch_idx >= 4:
-				self.net.train()
+				self.net_ddp.train()
 				return None  # Do not log, inaccurate in first batch
 
 		loss_dict = train_utils.aggregate_loss_dict(agg_loss_dict)
 		self.log_metrics(loss_dict, prefix='test')
 		self.print_metrics(loss_dict, prefix='test')
 
-		self.net.train()
+		self.net_ddp.train()
 		return loss_dict
 
 	def checkpoint_me(self, loss_dict, is_best):
