@@ -211,7 +211,7 @@ class ImportanceRenderer(torch.nn.Module):
                                              N_importance).detach().reshape(batch_size, num_rays, N_importance, 1)
         return importance_z_vals
 
-    def sample_pdf(self, bins, weights, N_importance, det=False, eps=1e-5):
+    def sample_pdf(self, bins, weights, N_importance, det=False, eps=6.1e-5):
         """
         Sample @N_importance samples from @bins with distribution defined by @weights.
         Inputs:
