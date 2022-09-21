@@ -2,8 +2,8 @@ python scripts/train.py \
 --dataset_type=ffhq_encode \
 --exp_dir=experiments/angle_trans_differ_ortho_mean \
 --workers=4 \
---batch_size=2 \
---test_batch_size=2 \
+--batch_size=3 \
+--test_batch_size=3 \
 --test_workers=4 \
 --val_interval=2500 \
 --save_interval=5000 \
@@ -15,4 +15,4 @@ python scripts/train.py \
 --cams_lambda=1 \
 --dataset_path=/workspace/ffhq_512_mirrored \
 --distributed=True \
---num_gpus=2
+--num_gpus=3

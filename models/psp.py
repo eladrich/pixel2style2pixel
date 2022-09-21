@@ -103,11 +103,12 @@ class pSp(nn.Module):
 
 		input_is_latent = not input_code
 
-		if y_cams:
-			images = self.decoder.synthesis(codes, y_cams)['image']
-		else:
-			images = self.decoder.synthesis(codes, camera_params)['image']
-		
+		with torch.cuda.amp.autocast(enabled=False):
+			if y_cams:
+				images = self.decoder.synthesis(codes, y_cams)['image']
+			else:
+				images = self.decoder.synthesis(codes, camera_params)['image']
+			
 		if resize:
 			images = self.face_pool(images)
 
