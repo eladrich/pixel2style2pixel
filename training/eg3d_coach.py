@@ -92,6 +92,7 @@ class Coach:
         rank=self.opts.rank)
 		else:
 			self.train_sampler, self.test_sampler = None, None
+			
 		self.train_dataloader = DataLoader(self.train_dataset,
 										   batch_size=self.opts.batch_size,
 										   shuffle= self.train_sampler is None,

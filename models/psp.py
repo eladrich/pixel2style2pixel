@@ -15,7 +15,7 @@ from torch_utils import misc
 
 from training.triplane import TriPlaneGenerator
 import dnnlib as dnnlib
-import models.eg3d.legacy as legacy
+from configs.eg3d_config import init_kwargs,rendering_kwargs
 import time
 
 def get_keys(d, name):
@@ -64,21 +64,19 @@ class pSp(nn.Module):
 
 			print('Loading encoders weights from irse50!')
 			encoder_ckpt = torch.load(model_paths['ir_se50'], map_location=torch.device(self.opts.rank))
+			decoder_ckpt = torch.load(model_paths['eg3d_pth'], map_location=torch.device(self.opts.rank))
 
 			# if input to encoder is not an RGB image, do not load the input layer weights
 			if self.opts.label_nc != 0:
 				encoder_ckpt = {k: v for k, v in encoder_ckpt.items() if "input_layer" not in k}
 			
 			self.encoder.load_state_dict(encoder_ckpt, strict=False)
-
-			with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
-				temp_decoder = legacy.load_network_pkl(f)['G_ema'].cuda(self.opts.rank)
 			
-			self.decoder = TriPlaneGenerator(*temp_decoder.init_args, **temp_decoder.init_kwargs).cuda(self.opts.rank).eval().requires_grad_(False)
+			self.decoder = TriPlaneGenerator(*(), **init_kwargs).cuda(self.opts.rank).eval()
+			self.decoder.load_state_dict(decoder_ckpt['G_ema'], strict=False)
+			self.decoder.neural_rendering_resolution = 512
+			self.decoder.rendering_kwargs = rendering_kwargs
 
-			misc.copy_params_and_buffers(temp_decoder, self.decoder, require_all=True)
-			self.decoder.neural_rendering_resolution = temp_decoder.neural_rendering_resolution
-			self.decoder.rendering_kwargs = temp_decoder.rendering_kwargs
 			self.latent_avg = None
 			print("Done!")
 
@@ -109,11 +107,11 @@ class pSp(nn.Module):
 
 		input_is_latent = not input_code
 
-		# with torch.cuda.amp.autocast(enabled=False):
-		if y_cams:
-			images = self.decoder.synthesis(codes, y_cams)['image']
-		else:
-			images = self.decoder.synthesis(codes, camera_params)['image']
+		with torch.cuda.amp.autocast(enabled=True):
+			if y_cams:
+				images = self.decoder.synthesis(codes, y_cams)['image']
+			else:
+				images = self.decoder.synthesis(codes, camera_params)['image']
 			
 		if resize:
 			images = self.face_pool(images)

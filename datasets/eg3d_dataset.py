@@ -17,9 +17,9 @@ class EG3DDataset(Dataset):
 		self.metadata = [{'path': i[0], 'cams': i[1]} for i in raw_metadata['labels']]
 
 		if is_train:
-			self.metadata = self.metadata[:120000]
+			self.metadata = self.metadata[:128000]
 		else:
-			self.metadata = self.metadata[120000:]
+			self.metadata = self.metadata[128000:]
 		self.transform = transform
 		
 

@@ -1,9 +1,9 @@
-CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 scripts/train.py \
+CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 scripts/train.py \
 --dataset_type=ffhq_encode \
 --exp_dir=experiments/amp \
 --workers=4 \
---batch_size=3 \
---test_batch_size=3 \
+--batch_size=1 \
+--test_batch_size=1 \
 --test_workers=4 \
 --val_interval=5000 \
 --save_interval=10000 \
@@ -12,7 +12,6 @@ CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 scripts/train.py \
 --lpips_lambda=0.8 \
 --l2_lambda=1 \
 --id_lambda=0.1 \
---cams_lambda=0.5 \
+--cams_lambda=1 \
 --dataset_path=/workspace/ffhq_512_mirrored \
---distributed=True \
---num_gpus=2
+--distributed=True 
