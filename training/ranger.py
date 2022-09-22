@@ -77,10 +77,8 @@ class Ranger(Optimizer):
 
 	def step(self, closure=None):
 		loss = None
-
 		# Evaluate averages and grad, update param tensors
 		for group in self.param_groups:
-
 			for p in group['params']:
 				if p.grad is None:
 					continue
@@ -88,7 +86,6 @@ class Ranger(Optimizer):
 
 				if grad.is_sparse:
 					raise RuntimeError('Ranger optimizer does not support sparse gradients')
-
 				p_data_fp32 = p.data.float()
 
 				state = self.state[p]  # get state dict for this param

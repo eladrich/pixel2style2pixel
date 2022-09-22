@@ -1,4 +1,4 @@
-torchrun --nproc_per_node=1 scripts/train.py \
+CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 scripts/train.py \
 --dataset_type=ffhq_encode \
 --exp_dir=experiments/amp \
 --workers=4 \
@@ -15,4 +15,4 @@ torchrun --nproc_per_node=1 scripts/train.py \
 --cams_lambda=0.5 \
 --dataset_path=/workspace/ffhq_512_mirrored \
 --distributed=True \
---num_gpus=3
+--num_gpus=2

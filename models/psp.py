@@ -16,6 +16,7 @@ from torch_utils import misc
 from training.triplane import TriPlaneGenerator
 import dnnlib as dnnlib
 import models.eg3d.legacy as legacy
+import time
 
 def get_keys(d, name):
 	if 'state_dict' in d:
@@ -33,11 +34,12 @@ class pSp(nn.Module):
 		# self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
 		self.opts.n_styles = 14
 		# Define architecture
+
 		self.encoder = self.set_encoder()
-		with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
-			self.decoder = legacy.load_network_pkl(f)['G_ema']
+		
 		self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
 		# Load weights if needed
+
 		self.load_weights()
 
 	def set_encoder(self):
@@ -49,36 +51,40 @@ class pSp(nn.Module):
 			encoder = psp_encoders.BackboneEncoderUsingLastLayerIntoWPlus(50, 'ir_se', self.opts)
 		else:
 			raise Exception('{} is not a valid encoders'.format(self.opts.encoder_type))
-		return encoder
+		return encoder.cuda()
 
 	def load_weights(self):
 		if self.opts.checkpoint_path is not None:
 			print('Loading pSp from checkpoint: {}'.format(self.opts.checkpoint_path))
-			ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+			ckpt = torch.load(self.opts.checkpoint_path, map_location=torch.device(self.opts.rank))
 			self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
 			self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
 			self.__load_latent_avg(ckpt)
 		else:
+
 			print('Loading encoders weights from irse50!')
-			encoder_ckpt = torch.load(model_paths['ir_se50'])
+			encoder_ckpt = torch.load(model_paths['ir_se50'], map_location=torch.device(self.opts.rank))
+
 			# if input to encoder is not an RGB image, do not load the input layer weights
 			if self.opts.label_nc != 0:
 				encoder_ckpt = {k: v for k, v in encoder_ckpt.items() if "input_layer" not in k}
+			
 			self.encoder.load_state_dict(encoder_ckpt, strict=False)
-			print('Loading decoder weights from pretrained!')
 
 			with dnnlib.util.open_url(model_paths['eg3d_ffhq']) as f:
-				temp_decoder = legacy.load_network_pkl(f)['G_ema']
+				temp_decoder = legacy.load_network_pkl(f)['G_ema'].cuda(self.opts.rank)
+			
+			self.decoder = TriPlaneGenerator(*temp_decoder.init_args, **temp_decoder.init_kwargs).cuda(self.opts.rank).eval().requires_grad_(False)
 
-			self.decoder = TriPlaneGenerator(*temp_decoder.init_args, **temp_decoder.init_kwargs).eval().requires_grad_(False)
 			misc.copy_params_and_buffers(temp_decoder, self.decoder, require_all=True)
 			self.decoder.neural_rendering_resolution = temp_decoder.neural_rendering_resolution
 			self.decoder.rendering_kwargs = temp_decoder.rendering_kwargs
-				
 			self.latent_avg = None
+			print("Done!")
 
 	def forward(self, x,y_cams = None, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, return_pose = False, alpha=None):
+
 		if input_code:
 			codes = x
 		else:
@@ -90,7 +96,6 @@ class pSp(nn.Module):
 				else:
 					codes = codes + self.latent_avg.repeat(codes.shape[0], 1, 1)
 
-
 		if latent_mask is not None:
 			for i in latent_mask:
 				if inject_latent is not None:
@@ -101,13 +106,14 @@ class pSp(nn.Module):
 				else:
 					codes[:, i] = 0
 
+
 		input_is_latent = not input_code
 
-		with torch.cuda.amp.autocast(enabled=False):
-			if y_cams:
-				images = self.decoder.synthesis(codes, y_cams)['image']
-			else:
-				images = self.decoder.synthesis(codes, camera_params)['image']
+		# with torch.cuda.amp.autocast(enabled=False):
+		if y_cams:
+			images = self.decoder.synthesis(codes, y_cams)['image']
+		else:
+			images = self.decoder.synthesis(codes, camera_params)['image']
 			
 		if resize:
 			images = self.face_pool(images)

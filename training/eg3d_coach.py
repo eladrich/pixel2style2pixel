@@ -19,10 +19,12 @@ from datasets.eg3d_dataset import EG3DDataset
 from criteria.lpips.lpips import LPIPS
 from models.psp import pSp
 from training.ranger import Ranger
+import torch.distributed as dist
 import copy
 
 from tqdm import tqdm
 from datetime import datetime
+import time
 
 
 
@@ -33,21 +35,27 @@ class Coach:
 		self.global_step = 0
 
 		self.device = torch.device(opts.rank)# TODO: Allow multiple GPU? currently using CUDA_VISIBLE_DEVICES
-		print(self.device)
+		torch.cuda.set_device(self.opts.rank)
 
 		if self.opts.use_wandb:
 			from utils.wandb_utils import WBLogger
 			self.wb_logger = WBLogger(self.opts)
 
 		# Initialize network
+
 		self.net = pSp(self.opts)
 		self.net.to(self.device)
-		if opts.distributed:
+		
 
-			opts.batch_size = int(opts.batch_size / opts.num_gpus)
+		if self.opts.distributed:
 
-			self.net_ddp = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[opts.rank])
+			self.opts.batch_size = int(self.opts.batch_size / self.opts.num_gpus)
+			self.opts.test_batch_size = int(self.opts.test_batch_size / self.opts.num_gpus)
+
+			self.net_ddp = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[self.opts.rank], output_device=self.opts.rank)
 			self.net = self.net_ddp.module
+
+			
 		# Estimate latent_avg via dense sampling if latent_avg is not available
 		if self.net.latent_avg is None:
 			latent_in = torch.randn(int(1e5),self.net.decoder.z_dim).to(self.device)
@@ -59,15 +67,15 @@ class Coach:
 		if self.opts.id_lambda > 0 and self.opts.moco_lambda > 0:
 			raise ValueError('Both ID and MoCo loss have lambdas > 0! Please select only one to have non-zero lambda!')
 
-		self.mse_loss = nn.MSELoss().to(self.device).eval()
+		self.mse_loss = nn.MSELoss().cuda(self.opts.rank).eval()
 		if self.opts.lpips_lambda > 0:
-			self.lpips_loss = LPIPS(net_type='alex').to(self.device).eval()
+			self.lpips_loss = LPIPS(net_type='alex',rank = self.opts.rank).cuda(self.opts.rank).eval()
 		if self.opts.id_lambda > 0:
-			self.id_loss = id_loss.IDLoss().to(self.device).eval()
+			self.id_loss = id_loss.IDLoss(self.opts.rank).eval()
 		if self.opts.w_norm_lambda > 0:
 			self.w_norm_loss = w_norm.WNormLoss(start_from_latent_avg=self.opts.start_from_latent_avg)
 		if self.opts.moco_lambda > 0:
-			self.moco_loss = moco_loss.MocoLoss().to(self.device).eval()
+			self.moco_loss = moco_loss.MocoLoss().cuda(self.opts.rank).eval()
 
 		# Initialize optimizer
 		self.optimizer = self.configure_optimizers()
@@ -76,7 +84,7 @@ class Coach:
 
 		# Initialize dataset
 		self.train_dataset, self.test_dataset = self.configure_datasets()
-
+		
 		if opts.distributed:
 			self.train_sampler = torch.utils.data.distributed.DistributedSampler(self.train_dataset,num_replicas=self.opts.num_gpus,
         rank=self.opts.rank)
@@ -84,7 +92,6 @@ class Coach:
         rank=self.opts.rank)
 		else:
 			self.train_sampler, self.test_sampler = None, None
-
 		self.train_dataloader = DataLoader(self.train_dataset,
 										   batch_size=self.opts.batch_size,
 										   shuffle= self.train_sampler is None,
@@ -99,7 +106,7 @@ class Coach:
 										  sampler = self.test_sampler,
 										  pin_memory=True,
 										  drop_last=True)
-
+		
 		# Initialize logger
 		log_dir = os.path.join(opts.exp_dir, 'logs')
 		os.makedirs(log_dir, exist_ok=True)
@@ -116,7 +123,7 @@ class Coach:
 
 	def train(self):
 		print(f"At GPU {self.opts.rank}, Train starts.")
-		self.net_ddp.train()
+		self.net.train()
 		epoch = 0
 		while self.global_step < self.opts.max_steps:
 			self.train_dataloader.sampler.set_epoch(epoch)
@@ -125,17 +132,16 @@ class Coach:
 				x, y_cams = batch
 				y = copy.deepcopy(x)
 
+				
 				x, y, y_cams = x.to(self.device),y.to(self.device).float(), y_cams.to(self.device)
+
+
 				with torch.cuda.amp.autocast():
 					y_hat, cams, latent = self.net.forward(x, return_latents=True)
 					loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
-				
-				self.optimizer.zero_grad()
-				print(loss)
-				self.scaler.scale(loss).backward()
-				self.scaler.unscale_(self.optimizer)
 
-				torch.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
+				self.optimizer.zero_grad()
+				self.scaler.scale(loss).backward()
 				self.scaler.step(self.optimizer)
 				self.scaler.update()
 
@@ -169,10 +175,11 @@ class Coach:
 					break
 
 				self.global_step += 1
+				
 			epoch += 1
 
 	def validate(self):
-		self.net_ddp.eval()
+		self.net.eval()
 		agg_loss_dict = []
 		for batch_idx, batch in enumerate(self.test_dataloader):
 			x, y_cams = batch
@@ -196,14 +203,14 @@ class Coach:
 
 			# For first step just do sanity test on small amount of data
 			if self.global_step == 0 and batch_idx >= 4:
-				self.net_ddp.train()
+				self.net.train()
 				return None  # Do not log, inaccurate in first batch
 
 		loss_dict = train_utils.aggregate_loss_dict(agg_loss_dict)
 		self.log_metrics(loss_dict, prefix='test')
 		self.print_metrics(loss_dict, prefix='test')
 
-		self.net_ddp.train()
+		self.net.train()
 		return loss_dict
 
 	def checkpoint_me(self, loss_dict, is_best):

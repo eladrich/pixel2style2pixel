@@ -8,7 +8,7 @@ def normalize_activation(x, eps=6.1e-5):
     return x / (norm_factor + eps)
 
 
-def get_state_dict(net_type: str = 'alex', version: str = '0.1'):
+def get_state_dict(net_type: str = 'alex', version: str = '0.1',rank = 0):
     # build url
     url = 'https://raw.githubusercontent.com/richzhang/PerceptualSimilarity/' \
         + f'master/lpips/weights/v{version}/{net_type}.pth'
@@ -16,7 +16,7 @@ def get_state_dict(net_type: str = 'alex', version: str = '0.1'):
     # download
     old_state_dict = torch.hub.load_state_dict_from_url(
         url, progress=True,
-        map_location=None if torch.cuda.is_available() else torch.device('cpu')
+        map_location=torch.device(rank) if torch.cuda.is_available() else torch.device('cpu')
     )
 
     # rename keys
