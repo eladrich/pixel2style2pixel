@@ -103,8 +103,8 @@ def angle_trans_to_cams(angle, trans, rank):
     pose[:, :3, :3] = R
 
     # c *= 0.27 # normalize camera radius
-    # c[:,1] += 0.006 # additional offset used in submission
-    # c[:,2] += 0.161 # additional offset used in submission
+    # c[1] += 0.006 # additional offset used in submission
+    # c[2] += 0.161 # additional offset used in submission
 
     pose[:,:3,3] = c
 

@@ -121,6 +121,7 @@ class Coach:
 			self.opts.save_interval = self.opts.max_steps
 
 		print(f"GPU {self.opts.rank} intialization is done.")
+		time.sleep(5)
 
 	def train(self):
 		print(f"At GPU {self.opts.rank}, Train starts.")
@@ -137,14 +138,16 @@ class Coach:
 				x, y, y_cams = x.to(self.device),y.to(self.device).float(), y_cams.to(self.device)
 
 
-				with torch.cuda.amp.autocast():
-					y_hat, cams, latent = self.net.forward(x, return_latents=True)
-					loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
+				# with torch.cuda.amp.autocast():
+				y_hat, cams, latent = self.net.forward(x, return_latents=True)
+				loss, loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent, cams, y_cams)
 
 				self.optimizer.zero_grad()
-				self.scaler.scale(loss).backward()
-				self.scaler.step(self.optimizer)
-				self.scaler.update()
+				loss.backward()
+				self.optimizer.step()
+				# self.scaler.scale(loss).backward()
+				# # self.scaler.step(self.optimizer)
+				# # self.scaler.update()
 
 				if self.opts.rank == 0:
 					# Logging related
